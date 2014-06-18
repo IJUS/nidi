@@ -2,7 +2,7 @@ NiDI
 =================
 ### Non-invasive Dependency Injection ###
 
-	NiDI (needy, get it?) provides a simple solution for dependency injection for Groovy applications. NiDI provides an application Context that takes care of instantiating all of the dependencies for you. Configuration is done entirely in code and is very easy to setup and test, while still maintaining a very high level of flexibility. There is no xml and error messages try to be a helpful as possible.
+NiDI (needy, get it?) provides a simple solution for dependency injection for Groovy applications. NiDI provides an application Context that takes care of instantiating all of the dependencies for you. Configuration is done entirely in code and is very easy to setup and test, while still maintaining a very high level of flexibility. There is no xml and error messages try to be a helpful as possible.
 	
 ## Hello World ##
 
@@ -64,6 +64,16 @@ A common use case is to have a set of default bindings that are sometimes overri
 		ctx.bind(SearchService).to(DifferentSearchService)
 		...
 	}
+	
+## Setting basic properties ##
+
+It may happen that an instance will need some basic property set before it's available to use. This might be something like just setting the URL for a particular service. These situations should be kept to a minimum because it isn't obvious when a property is being injected, but there are certainly times when this is the best solution. If a simple string is all your changing, there's no need to create a whole new implementation. Just use the `Binding.setupInstance(Closure)` method.
+
+	//configuring context...
+	ctx.bind(ThisInterface).to(ThatImplementation).setupInstance {ThatImplementation instance->
+		//this closure will be called every time a new instance of ThatImplementation is created
+		instance.setSomeProperty("new value")
+	}
 
 ## Complex Hierarchies ##
 
@@ -103,4 +113,7 @@ net.ijus.nidi.Scope:
     //This is true even if you make the call from another context!
     
 
+# Limitations / Known Issues #
 
+- Currently, instantiation will fail if the implementation class has more than one public constructor. This limitation may or may not be lifted by adding a constructor annotation.
+- 
