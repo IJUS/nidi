@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 public class Context {
+	String name = "DefaultContext"
 
 	ImplementationCache cache = new BasicImplementationCache()
 
@@ -16,10 +17,6 @@ public class Context {
 	Map<Class, ClassContext> classContexts = [:]
 	Set<Class> ctxGlobalClasses = [] as Set
 	Scope defaultScope = Scope.ALWAYS_CREATE_NEW
-
-	String getName() {
-		"DefaultContext"
-	}
 
 	Scope getScopeForClass(Class clazz) {
 		Scope s
@@ -94,7 +91,6 @@ public class Context {
 		}  else {
 			throw new InvalidConfigurationException("Attempted to get an instance of: ${clazz.getCanonicalName()}, but no Bindings exist for this class")
 		}
-		null
 	}
 
 	void addBinding(Binding b) {

@@ -10,6 +10,8 @@ import groovy.transform.InheritConstructors
 @CompileStatic
 public class ClassContext extends Context implements Binding {
 
+	String name = "ClassContext"
+
 	Class boundClass
 	Class implementationClass
 
