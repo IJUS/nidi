@@ -25,3 +25,23 @@ dependencies {
 	compile 'org.slf4j:slf4j-simple:1.7.5'
 
 }
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+	classifier = 'javadoc'
+	from groovydoc.destinationDir
+}
+
+install.dependsOn sourcesJar
+install.dependsOn javadocJar
+
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+

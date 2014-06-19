@@ -11,7 +11,7 @@ import spock.lang.*
 class ScopingSpec extends Specification {
 
 	def cleanup(){
-		TestUtils.clearContextHolder()
+		ContextTestUtils.clearContextHolder()
 	}
 
 	void "Scopes should be comparable based on their values"(){
@@ -24,7 +24,7 @@ class ScopingSpec extends Specification {
 
 	void "BindingFactory should setup scope states properly"(){
 		setup:
-		TestUtils.clearContextHolder()
+		ContextTestUtils.clearContextHolder()
 		Context ctx = Configuration.configureNew{
 			defaultScope = currentScope
 			bind(CreditCardProcessor).to(BasicCCProcessor)

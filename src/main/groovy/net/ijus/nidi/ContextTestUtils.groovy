@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
  * Created by pfried on 6/18/14.
  */
 
-public class TestUtils {
-	static final Logger log = LoggerFactory.getLogger(TestUtils)
+public class ContextTestUtils {
+	static final Logger log = LoggerFactory.getLogger(ContextTestUtils)
 
 	static void clearContextHolder(){
-		log.debug("Resetting the ContextHolder")
+		log.info("Resetting the ContextHolder")
 		ContextHolder.singletons.clear()
 		ContextHolder.singletonCache.clearCache()
 		ContextHolder.setContext(null)

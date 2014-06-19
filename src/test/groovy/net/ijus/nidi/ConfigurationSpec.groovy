@@ -17,7 +17,7 @@ import static net.ijus.nidi.Configuration.*
 public class ConfigurationSpec extends Specification {
 
 	def cleanup(){
-		TestUtils.clearContextHolder()
+		ContextTestUtils.clearContextHolder()
 	}
 
 	void "Bindings that are scoped as singletons should all reference the same class instance for a given implementation"(){

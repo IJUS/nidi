@@ -11,7 +11,7 @@ import spock.lang.Specification
 public class BasicBindingSpec extends Specification {
 
 	def cleanup(){
-		TestUtils.clearContextHolder()
+		ContextTestUtils.clearContextHolder()
 	}
 
 	void "Bindings should create new instances of classes"() {

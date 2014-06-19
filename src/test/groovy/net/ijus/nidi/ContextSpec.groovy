@@ -17,7 +17,7 @@ import spock.lang.Specification
 public class ContextSpec extends Specification {
 
 	def cleanup(){
-		TestUtils.clearContextHolder()
+		ContextTestUtils.clearContextHolder()
 	}
 
 	void "context register mehtod should create a basic binding for a concrete class"() {
