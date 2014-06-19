@@ -93,6 +93,11 @@ public class Context {
 		}
 	}
 
+	BasicBinding register(Class concreteClass, Scope bindingScope = null) {
+		Scope s = bindingScope?: defaultScope
+		return bind(concreteClass).withScope(s).toItself()
+	}
+
 	void addBinding(Binding b) {
 		b.setParentContext(this)
 		this.bindings.put(b.getBoundClass(), b)

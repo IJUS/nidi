@@ -2,6 +2,7 @@ package net.ijus.nidi
 
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.ConcreteClassNoInterface
 import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
@@ -13,10 +14,28 @@ import spock.lang.Specification
  * Created by pfried on 6/17/14.
  */
 
-public class DefaultContextImplSpec extends Specification {
+public class ContextSpec extends Specification {
 
 	def cleanup(){
 		TestUtils.clearContextHolder()
+	}
+
+	void "context register mehtod should create a basic binding for a concrete class"() {
+		given:
+		Context ctx = Configuration.configureNew{Context c->
+			c.register(ConcreteClassNoInterface).setupInstance {instance->
+				stringProperty = "mockProperty"
+			}
+			c.bind(LoggingService).to(LoggingServiceImpl)
+		}
+
+		when:
+		def inst = ctx.getInstance(ConcreteClassNoInterface)
+
+		then: "the instance should have been created properly"
+		inst instanceof ConcreteClassNoInterface
+		inst.loggingService instanceof LoggingServiceImpl
+		inst.helloWorld() == "mockProperty"
 	}
 
 	void "context should handle instantiating objects with nested dependencies"(){
