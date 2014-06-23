@@ -8,6 +8,8 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 public class Context {
+	private boolean defaultScopeSpecified = false
+
 	String name = "DefaultContext"
 
 	ImplementationCache cache = new BasicImplementationCache()
@@ -31,19 +33,19 @@ public class Context {
 		return s
 	}
 
-	void inheritFrom(Class contextClass) {
-		if (!Context.isAssignableFrom(contextClass)) {
-			throw new InvalidConfigurationException("Attempted to inherit from a class that is not a Context: ${contextClass.getCanonicalName()}")
-		}
-		try {
-			def parentCtx = contextClass.newInstance()
-			inheritFrom(parentCtx as Context)
-		} catch (Exception e) {
-			throw new InvalidConfigurationException("Could not inherit from ${contextClass.getCanonicalName()}", e)
-		}
+	Context inheritFrom(Class contextConfigClass) throws InvalidConfigurationException {
+		Context parent = Configuration.configureNew(contextConfigClass)
+		doInherit(parent)
+		return this
 	}
 
-	void inheritFrom(Context ctx) {
+	Context inheritFrom(String fqcn) throws InvalidConfigurationException {
+		Context parent = Configuration.configureNew(fqcn)
+		doInherit(parent)
+		return this
+	}
+
+	private void doInherit(Context ctx) {
 		def parentContext = ctx
 		Collection<Class> keysToInherit = parentContext.getBindings().keySet().findAll{Class key-> !bindings.containsKey(key)}
 		keysToInherit.each{Class toInherit->
@@ -56,20 +58,11 @@ public class Context {
 			ClassContext classCtx = parentContext.getClassContexts().remove(c)
 			addClassContext(classCtx)
 		}
-	}
 
-	void inheritFrom(String fqcn) {
-		try {
-			Class c = Class.forName(fqcn)
-
-			inheritFrom(c)
-		} catch (ClassNotFoundException e) {
-			throw new InvalidConfigurationException("Tried to inherit from: ${fqcn}, but class could not be found", e)
+		if (!defaultScopeSpecified) {
+			this.defaultScope = ctx.getDefaultScope()
 		}
 	}
-
-
-
 
 	BindingFactory bind(Class clazz) {
 		BindingFactory f = new BindingFactory(this)
@@ -104,7 +97,11 @@ public class Context {
 	}
 
 	Binding removeBinding(Class clazz) {
+		assert bindings.containsKey(clazz)
+		Binding b = bindings.get(clazz)
 		this.bindings.remove(clazz.getCanonicalName())
+		b.parentContext = null
+		return b
 	}
 
 	void addClassContext(ClassContext ctx) {
@@ -112,4 +109,8 @@ public class Context {
 		classContexts.put(ctx.getBoundClass(), ctx)
 	}
 
+	void setDefaultScope(Scope defaultScope) {
+		this.defaultScope = defaultScope
+		this.defaultScopeSpecified = true
+	}
 }
