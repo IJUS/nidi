@@ -21,51 +21,6 @@ public class ContextSpec extends Specification {
 		ContextTestUtils.clearContextHolder()
 	}
 
-	void "calling removeBinding should return it"(){
-		setup:
-		Context ctx = Configuration.configureNew{
-			bind(LoggingService).to(LoggingServiceImpl)
-		}
-
-		when:
-		Binding binding = ctx.removeBinding(LoggingService)
-
-		then:
-		binding
-		binding.parentContext == null
-
-	}
-
-	void "inheriting from another context should provide that context's bindings"(){
-		when: "configure a child context to inherit from the parent"
-		Context child = Configuration.configureNew{Context ctx->
-			ctx.inheritFrom(ExampleConfigScript)
-			ctx.bind(CreditCardProcessor).to(BasicCCProcessor) //the parent uses ComplexCCProc
-		}
-
-		then:
-		child.getInstance(CreditCardProcessor) instanceof BasicCCProcessor
-		child.getInstance(LoggingService) instanceof LoggingServiceImpl
-	}
-
-	void "context register mehtod should create a basic binding for a concrete class"() {
-		given:
-		Context ctx = Configuration.configureNew{Context c->
-			c.register(ConcreteClassNoInterface).setupInstance {instance->
-				stringProperty = "mockProperty"
-			}
-			c.bind(LoggingService).to(LoggingServiceImpl)
-		}
-
-		when:
-		def inst = ctx.getInstance(ConcreteClassNoInterface)
-
-		then: "the instance should have been created properly"
-		inst instanceof ConcreteClassNoInterface
-		inst.loggingService instanceof LoggingServiceImpl
-		inst.helloWorld() == "mockProperty"
-	}
-
 	void "context should handle instantiating objects with nested dependencies"(){
 		setup:
 		Context ctx = new Context()

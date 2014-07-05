@@ -9,7 +9,6 @@ import groovy.transform.CompileStatic;
 @CompileStatic
 public interface ContextConfig {
 
-
-	abstract void configure(Context ctx)
+	abstract void configure(ContextBuilder builder)
 
 }
