@@ -2,11 +2,15 @@ package net.ijus.nidi
 
 import com.example.general.CorrectConstAnnotation
 import com.example.general.MultipleAnnotatedConstructors
-import com.example.general.UnannotatedConstructors;
+import com.example.general.UnannotatedConstructors
+import com.example.impl.BasicCCProcessor
+import com.example.impl.ComplexCCProcessor
+import com.example.interfaces.CreditCardProcessor
+import com.example.interfaces.FraudDetectionService
+import com.example.interfaces.LoggingService;
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
-
 
 /**
  * Created by pfried on 7/5/14.
@@ -15,11 +19,76 @@ import java.lang.reflect.Constructor
 
 public class BindingBuilderSpec extends Specification {
 
-	BindingBuilder builder = new BindingBuilder(MultipleAnnotatedConstructors)
+	void "setting the scope should work in a variety of ways"(){
+		setup:
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor)
+
+		when:
+		builder.to(BasicCCProcessor){
+			scope = Scope.ONE_PER_BINDING
+		}
+
+		then:
+		builder.scope == Scope.ONE_PER_BINDING
+
+		when:
+		builder.withScope(Scope.SINGLETON)
+
+		then:
+		builder.scope == Scope.SINGLETON
+
+	}
+
+	void "Building a binding with a 0-arg constructor should return a basic binding"(){
+		setup:
+		ContextBuilder ctxBuilder = Mock()
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor)
+		builder.to(BasicCCProcessor)
+
+		when:
+		Binding result = builder.build()
+
+		then:
+		result.getBoundClass() == CreditCardProcessor
+		result.getImplClass() == BasicCCProcessor
+
+	}
+
+	BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors)
+
+	void "Resolving constructor params for a 0-arg constructor should return a 0-length array"() {
+		setup:
+		ContextBuilder ctxBuilder = Mock()
+		ctxBuilder.containsBindingFor(_ as Class) >> true
+		ctxBuilder.getContextRef() >> Mock(Context)
+		Constructor constructor = BasicCCProcessor.getConstructor()
+
+		when:
+		Binding[] result = basicTestBuilder.resolveConstructorParams(constructor, ctxBuilder)
+
+		then:
+		result.length == 0
+	}
+
+	void "Resolving constructor params should properly create ContextReferenceBindings for constructor params"() {
+		setup:
+		ContextBuilder ctxBuilder = Mock()
+		ctxBuilder.containsBindingFor(_ as Class) >> true
+		ctxBuilder.getContextRef() >> Mock(Context)
+		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)
+
+		when:
+		Binding[] paramBindings = basicTestBuilder.resolveConstructorParams(constructor, ctxBuilder)
+
+		then:
+		paramBindings.length == 2
+		paramBindings[0].getBoundClass() == FraudDetectionService
+		paramBindings[1].getBoundClass() == LoggingService
+	}
 
 	void "Resolving constructor should throw an exception if multiple @Inject annotations are present"() {
 		when:
-		builder.resolveConstructor(MultipleAnnotatedConstructors)
+		basicTestBuilder.resolveConstructor(MultipleAnnotatedConstructors)
 
 		then:
 		def exception = thrown(InvalidConfigurationException)
@@ -28,7 +97,7 @@ public class BindingBuilderSpec extends Specification {
 
 	void "Resolving constructor should throw an exception if multiple constructors are found but none have the @Inject annotation"() {
 		when:
-		builder.resolveConstructor(UnannotatedConstructors)
+		basicTestBuilder.resolveConstructor(UnannotatedConstructors)
 
 		then:
 		def ex = thrown(InvalidConfigurationException)
@@ -37,7 +106,7 @@ public class BindingBuilderSpec extends Specification {
 
 	void "Constructor should be resolved properly when a class has multiple constructors and one has the @Inject annotation"() {
 		when:
-		def constructor = builder.resolveConstructor(CorrectConstAnnotation)
+		def constructor = basicTestBuilder.resolveConstructor(CorrectConstAnnotation)
 
 		then:
 		notThrown(InvalidConfigurationException)

@@ -7,6 +7,7 @@ import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextBuilder
 import net.ijus.nidi.ContextConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,7 @@ public class ExampleConfigScript implements ContextConfig {
 	static final Logger log = LoggerFactory.getLogger(ExampleConfigScript)
 
 	@Override
-	void configure(Context ctx) {
+	void configure(ContextBuilder ctx) {
 		//Binds the CreditCardProcessor (interface) to the ComplexCCProcessor (implementation)
 		ctx.bind(CreditCardProcessor).to(ComplexCCProcessor)
 

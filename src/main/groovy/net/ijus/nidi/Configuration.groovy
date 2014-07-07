@@ -62,13 +62,13 @@ public class Configuration {
 			Class configClass = Class.forName(fqcn)
 			configure(ctx, configClass)
 		} catch (ClassNotFoundException e) {
-			throw new InvalidConfigurationException("Attempted to configure context: ${ctx.getName()} using the class: ${fqcn}, but the class was not found on the classpath")
+			throw new InvalidConfigurationException("Attempted to configure context: ${ctx} using the class: ${fqcn}, but the class was not found on the classpath")
 		}
 	}
 
 	static void configure(Context ctx, Class configClass) {
 		if (!ContextConfig.isAssignableFrom(configClass)) {
-			throw new InvalidConfigurationException("Attempted to configure the Context: ${ctx.getName()} using the class: ${configClass.getCanonicalName()}, which is NOT a valid implementation of ContextConfig")
+			throw new InvalidConfigurationException("Attempted to configure the Context: ${ctx} using the class: ${configClass.getCanonicalName()}, which is NOT a valid implementation of ContextConfig")
 		}
 		def config
 		try {
@@ -85,7 +85,8 @@ public class Configuration {
 	}
 
 	static void configure(Context ctx, ContextConfig config) {
-		config.configure(ctx)
+		//TODO: write me
+		assert "method was written" == "false"
 	}
 
 

@@ -3,11 +3,11 @@ package net.ijus.nidi
 /**
  * Created by pfried on 6/16/14.
  */
-public interface Binding<T> {
+public interface Binding {
 
-	T getInstance()
+	def getInstance()
 
-	Class<T> getImplClass()
+	Class getImplClass()
 
 	Class getBoundClass()
 }

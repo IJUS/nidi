@@ -9,11 +9,36 @@ import java.lang.reflect.Constructor
  */
 
 @CompileStatic
-public class InstanceGenerator<T> {
+public class InstanceGenerator {
 
 	Binding[] constructorArgs
-	Constructor<T> constructor
+	Class clazz
+	Closure setup
 
+	InstanceGenerator(Class clazz, Binding[] constructorArgs = null, Closure setup = null) {
+		this.clazz = clazz
+		this.constructorArgs = constructorArgs
+		this.setup = setup
+	}
 
+	InstanceGenerator(Class clazz, Closure setup) {
+		this(clazz, null, setup)
+	}
+
+	def createNewInstance(){
+		def instance
+		if (constructorArgs && constructorArgs.length > 0) {
+			def args = constructorArgs.collect{Binding b-> b.getInstance()}
+			instance = clazz.newInstance(args as Object[])
+		} else {
+			instance = clazz.newInstance()
+		}
+
+		if (setup) {
+			setup.setDelegate(instance)
+			setup.call(instance)
+		}
+		instance
+	}
 
 }

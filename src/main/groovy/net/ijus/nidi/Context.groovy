@@ -16,7 +16,14 @@ public class Context {
 		return bindingsMap.get(clazz)
 	}
 
-	def getInstance(Class clazz){
-		return null //TODO: write method
+	boolean containsBinding(Class clazz) {
+		return bindingsMap.containsKey(clazz)
+	}
+
+	def getInstance(Class clazz) {
+		if (!containsBinding(clazz)) {
+			throw new InvalidConfigurationException("The Class: ${clazz.getCanonicalName()} was requested from a Context, but no Binding exists for it")
+		}
+		return getBindingForClass(clazz).getInstance()
 	}
 }

@@ -18,16 +18,14 @@ public class ContextBuilder {
 	Context ctx = new Context()
 
 	BindingBuilder bind(Class clazz){
-		return new BindingBuilder(clazz)
+		BindingBuilder bb = new BindingBuilder(clazz)
+		ctxBindings.add(bb)
+		bb
 	}
 
-	void validate() throws InvalidConfigurationException {
-		ctxBindings.each{BindingBuilder builder->
-			if (!builder.scope) {
-				builder.setScope(defaultScope)
-			}
-			//TODO: build bindings
-		}
+
+	boolean containsBindingFor(Class clazz) {
+		return ctxBindings.any{BindingBuilder bb-> bb.from == clazz}
 	}
 
 	Context getContextRef(){
@@ -35,7 +33,18 @@ public class ContextBuilder {
 	}
 
 	Context build() throws InvalidConfigurationException {
-		validate()
+		log.debug("Building Context with ${ctxBindings.size()} Bindings in the root context")
+		ctxBindings.each{BindingBuilder builder->
+			if (!builder.scope) {
+				builder.setScope(defaultScope)
+			}
+			builder.validateClassAssignment()
+			Binding binding = builder.build(this)
+			log.debug("Adding Binding: ${binding} to the Context")
+			ctx.bindingsMap.put(binding.getBoundClass(), binding)
+		}
+
+		return ctx
 
 	}
 }

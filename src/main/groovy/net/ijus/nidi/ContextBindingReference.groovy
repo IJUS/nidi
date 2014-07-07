@@ -7,7 +7,7 @@ import groovy.transform.CompileStatic
  */
 
 @CompileStatic
-public class ContextBindingReference {
+public class ContextBindingReference implements Binding {
 
 	Class clazz
 	Context ctx
@@ -17,6 +17,18 @@ public class ContextBindingReference {
 		this.ctx = ctx
 	}
 
+	@Override
+	getInstance() {
+		return ctx.getBindingForClass(clazz).getInstance()
+	}
 
+	@Override
+	Class getImplClass() {
+		return ctx.getBindingForClass(clazz).getImplClass()
+	}
 
+	@Override
+	Class getBoundClass() {
+		clazz
+	}
 }

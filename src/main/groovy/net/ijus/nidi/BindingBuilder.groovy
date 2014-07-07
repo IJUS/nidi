@@ -17,9 +17,8 @@ class BindingBuilder {
 	Class impl
 	Scope scope
 
-	Set<Binding> innerBindings = [] as Set
-
-
+	Map<Class, Class> innerBindings = [:]
+	Map<String, Object> boundProperties = [:]
 
 	Binding binding
 
@@ -29,7 +28,7 @@ class BindingBuilder {
 
 	BindingBuilder to(Class clazz, Closure config = null) {
 		this.impl = clazz
-
+		validateClassAssignment()
 		if (config) {
 			config.setDelegate(this)
 			config.call(this)
@@ -37,10 +36,17 @@ class BindingBuilder {
 		return this
 	}
 
-
 	BindingBuilder withScope(Scope s) {
 		this.scope = s
 		return this
+	}
+
+	void bindForThis(Class clazz, Class impl) {
+		this.innerBindings.put(clazz, impl)
+	}
+
+	void bindForThis(String property, Object value) {
+		this.boundProperties.put(property, value)
 	}
 
 	void inheritScope(Scope s) {
@@ -49,7 +55,9 @@ class BindingBuilder {
 		}
 	}
 
-	Binding[] resolveConstructorParams(Constructor constructor, ContextBuilder ctxBuilder, BindingBuilder parentBindingBuilder = null) {
+
+
+	Binding[] resolveConstructorParams(Constructor constructor, ContextBuilder ctxBuilder) {
 		Class[] constructorParams = constructor.getParameterTypes()
 		Annotation[][] allAnnotations = constructor.getParameterAnnotations()
 
@@ -60,30 +68,22 @@ class BindingBuilder {
 		Binding[] paramBindings = new Binding[constructorParams.length]
 
 		for (int paramIdx = 0; paramIdx < constructorParams.length; paramIdx++) {
-
 			Class paramType = constructorParams[paramIdx]
-			paramBindings[paramIdx] = buildBindingForClass(paramType, ctxBuilder)
-		}
 
+			paramBindings[paramIdx] = buildContextRefBinding(paramType, ctxBuilder)
+		}
+		return paramBindings
 	}
 
-	Binding buildBindingForClass(Class baseType, ContextBuilder ctxBuilder, BindingBuilder parentBindingBuilder = null) {
-		log.trace("buildBindingForClass: baseType=${name(baseType)}, parentBuilderExists=${parentBindingBuilder != null}")
-
-		Binding b
-		if (parentBindingBuilder) {
-			b = parentBindingBuilder.buildBindingForClass(baseType, ctxBuilder)
-			log.debug("parentBindingBuilder returned binding: ${(b)? b.dump() : "null"}")
-
+	Binding buildContextRefBinding(Class baseType, ContextBuilder ctxBuilder) {
+		log.trace("buildBindingForClass: baseType=${name(baseType)}")
+		if (!ctxBuilder.containsBindingFor(baseType)) {
+			throw new InvalidConfigurationException("The Constructor for Class: ${name(impl)} has a parameter ")
 		}
-
-		if (!b) {
-			Context ctx = ctxBuilder.getContextRef()
-			b = new ContextBindingReference(baseType, ctx)
-			log.debug("bindingBuilder returning ContextBindingReference for ${name(baseType)}")
-		}
-
-
+		Context ctx = ctxBuilder.getContextRef()
+		Binding b = new ContextBindingReference(baseType, ctx)
+		log.debug("bindingBuilder returning ContextBindingReference for ${name(baseType)}")
+		return b
 	}
 
 
@@ -114,5 +114,21 @@ class BindingBuilder {
 			name = clazz.getCanonicalName()
 		}
 		name
+	}
+
+	void validateClassAssignment() {
+		if (!impl) {
+			throw new InvalidConfigurationException("The Class: ${name(from)} was declared to be bound but the implementation class is null")
+		} else if (!from.isAssignableFrom(impl)) {
+			throw new InvalidConfigurationException("The Class: ${name(from)} was bound to ${name(impl)} but ${impl.getSimpleName()} is not a ${from.getSimpleName()}")
+		}
+	}
+
+	Binding build(ContextBuilder ctxBuilder) throws InvalidConfigurationException {
+		Constructor constructor = resolveConstructor(this.impl)
+		Binding[] params = resolveConstructorParams(constructor, ctxBuilder)
+
+		return new BasicBinding(from, impl, params)
+
 	}
 }
