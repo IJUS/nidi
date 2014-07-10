@@ -10,4 +10,8 @@ public interface Binding {
 	Class getImplClass()
 
 	Class getBoundClass()
+
+	Scope getScope()
+
+	void validate()
 }

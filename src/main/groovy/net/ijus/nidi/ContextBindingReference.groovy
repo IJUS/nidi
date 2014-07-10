@@ -31,4 +31,18 @@ public class ContextBindingReference implements Binding {
 	Class getBoundClass() {
 		clazz
 	}
+
+	@Override
+	Scope getScope() {
+		return ctx.getBindingForClass(clazz).getScope()
+	}
+
+	@Override
+	void validate() {
+		Binding b = ctx.getBindingForClass(clazz)
+		if (!b) {
+			throw new InvalidConfigurationException("The Context does not contain a binding for ${clazz.getCanonicalName()} but it definitely should")
+		}
+		b.validate()
+	}
 }

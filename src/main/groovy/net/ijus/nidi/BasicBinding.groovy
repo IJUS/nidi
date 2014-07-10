@@ -30,4 +30,14 @@ public class BasicBinding implements Binding {
 	Class getBoundClass() {
 		return bound
 	}
+
+	@Override
+	Scope getScope() {
+		SCOPE
+	}
+
+	@Override
+	void validate() {
+		throw new Exception("method validate() has not been implemented yet. write me!")
+	}
 }
