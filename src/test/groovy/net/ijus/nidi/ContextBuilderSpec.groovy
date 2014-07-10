@@ -25,7 +25,7 @@ public class ContextBuilderSpec extends Specification {
 		builder.build()
 
 		then:
-		BindingBuilder bb = builder.ctxBindings[0]
+		BindingBuilder bb = builder.ctxBindings.get(CreditCardProcessor)
 		bb.scope == Scope.SINGLETON
 	}
 

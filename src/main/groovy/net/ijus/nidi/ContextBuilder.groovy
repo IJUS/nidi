@@ -13,19 +13,19 @@ public class ContextBuilder {
 	static final Logger log = LoggerFactory.getLogger(ContextBuilder)
 
 	Scope defaultScope = Scope.ALWAYS_CREATE_NEW
-	Set<BindingBuilder> ctxBindings = [] as Set
+	Map<Class, BindingBuilder> ctxBindings = [:]
 
 	Context ctx = new Context()
 
 	BindingBuilder bind(Class clazz){
-		BindingBuilder bb = new BindingBuilder(clazz)
-		ctxBindings.add(bb)
+		BindingBuilder bb = new BindingBuilder(clazz, this)
+		ctxBindings.put(clazz, bb)
 		bb
 	}
 
 
 	boolean containsBindingFor(Class clazz) {
-		return ctxBindings.any{BindingBuilder bb-> bb.from == clazz}
+		return ctxBindings.containsKey(clazz)
 	}
 
 	Context getContextRef(){
@@ -34,7 +34,7 @@ public class ContextBuilder {
 
 	Context build() throws InvalidConfigurationException {
 		log.debug("Building Context with ${ctxBindings.size()} Bindings in the root context")
-		ctxBindings.each{BindingBuilder builder->
+		ctxBindings.each{Class key, BindingBuilder builder->
 			if (!builder.scope) {
 				builder.setScope(defaultScope)
 			}

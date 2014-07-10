@@ -21,7 +21,7 @@ public class BindingBuilderSpec extends Specification {
 
 	void "setting the scope should work in a variety of ways"(){
 		setup:
-		BindingBuilder builder = new BindingBuilder(CreditCardProcessor)
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, null)
 
 		when:
 		builder.to(BasicCCProcessor){
@@ -42,7 +42,7 @@ public class BindingBuilderSpec extends Specification {
 	void "Building a binding with a 0-arg constructor should return a basic binding"(){
 		setup:
 		ContextBuilder ctxBuilder = Mock()
-		BindingBuilder builder = new BindingBuilder(CreditCardProcessor)
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, null)
 		builder.to(BasicCCProcessor)
 
 		when:
@@ -54,13 +54,14 @@ public class BindingBuilderSpec extends Specification {
 
 	}
 
-	BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors)
 
 	void "Resolving constructor params for a 0-arg constructor should return a 0-length array"() {
 		setup:
+		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
 		ContextBuilder ctxBuilder = Mock()
 		ctxBuilder.containsBindingFor(_ as Class) >> true
 		ctxBuilder.getContextRef() >> Mock(Context)
+		basicTestBuilder.ctxBuilder = ctxBuilder
 		Constructor constructor = BasicCCProcessor.getConstructor()
 
 		when:
@@ -72,9 +73,11 @@ public class BindingBuilderSpec extends Specification {
 
 	void "Resolving constructor params should properly create ContextReferenceBindings for constructor params"() {
 		setup:
+		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
 		ContextBuilder ctxBuilder = Mock()
 		ctxBuilder.containsBindingFor(_ as Class) >> true
 		ctxBuilder.getContextRef() >> Mock(Context)
+		basicTestBuilder.ctxBuilder = ctxBuilder
 		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)
 
 		when:
@@ -88,6 +91,7 @@ public class BindingBuilderSpec extends Specification {
 
 	void "Resolving constructor should throw an exception if multiple @Inject annotations are present"() {
 		when:
+		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
 		basicTestBuilder.resolveConstructor(MultipleAnnotatedConstructors)
 
 		then:
@@ -96,6 +100,9 @@ public class BindingBuilderSpec extends Specification {
 	}
 
 	void "Resolving constructor should throw an exception if multiple constructors are found but none have the @Inject annotation"() {
+		setup:
+		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
+
 		when:
 		basicTestBuilder.resolveConstructor(UnannotatedConstructors)
 
@@ -105,6 +112,9 @@ public class BindingBuilderSpec extends Specification {
 	}
 
 	void "Constructor should be resolved properly when a class has multiple constructors and one has the @Inject annotation"() {
+		setup:
+		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
+
 		when:
 		def constructor = basicTestBuilder.resolveConstructor(CorrectConstAnnotation)
 

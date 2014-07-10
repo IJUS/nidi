@@ -12,7 +12,7 @@ import java.lang.reflect.Constructor
 
 class BindingBuilder {
 	static final Logger log = LoggerFactory.getLogger(BindingBuilder)
-
+	ContextBuilder ctxBuilder
 	Class from
 	Class impl
 	Scope scope
@@ -22,8 +22,9 @@ class BindingBuilder {
 
 	Binding binding
 
-	BindingBuilder(Class clazz) {
+	BindingBuilder(Class clazz, ContextBuilder ctxBuilder) {
 		this.from = clazz
+		this.ctxBuilder = ctxBuilder
 	}
 
 	BindingBuilder to(Class clazz, Closure config = null) {

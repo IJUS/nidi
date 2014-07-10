@@ -20,7 +20,7 @@ public class ContextBuilderIntegrationTest extends Specification {
 		Binding b = ctx.getBindingForClass(LoggingService)
 
 		then:
-
+		b.getScope() == Scope.SINGLETON
 
 		when:
 		def serv1 = ctx.getInstance(LoggingService)
