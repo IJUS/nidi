@@ -5,15 +5,15 @@ package net.ijus.nidi
 
 public class BasicBinding implements Binding {
 
-	public static Scope SCOPE = Scope.ALWAYS_CREATE_NEW
+	public static final Scope SCOPE = Scope.ALWAYS_CREATE_NEW
 	InstanceGenerator instanceGenerator
 	Class bound
 	Class impl
 
-	BasicBinding(Class boundClass, Class impl, Binding[] constructorParams = null) {
+	BasicBinding(Class boundClass, InstanceGenerator instanceGenerator) {
 		this.bound = boundClass
-		this.impl = impl
-		this.instanceGenerator = new InstanceGenerator(impl, constructorParams)
+		this.instanceGenerator = instanceGenerator
+		this.impl = instanceGenerator.clazz
 	}
 
 	@Override

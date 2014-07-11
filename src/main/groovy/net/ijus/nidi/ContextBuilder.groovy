@@ -39,7 +39,7 @@ public class ContextBuilder {
 				builder.setScope(defaultScope)
 			}
 			builder.validateClassAssignment()
-			Binding binding = builder.build(this)
+			Binding binding = builder.build()
 			log.debug("Adding Binding: ${binding} to the Context")
 			ctx.bindingsMap.put(binding.getBoundClass(), binding)
 		}

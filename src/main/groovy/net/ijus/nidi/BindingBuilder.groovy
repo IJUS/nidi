@@ -16,6 +16,7 @@ class BindingBuilder {
 	Class from
 	Class impl
 	Scope scope
+	Closure instanceConfigClosure
 
 	Map<Class, Class> innerBindings = [:]
 	Map<String, Object> boundProperties = [:]
@@ -29,25 +30,14 @@ class BindingBuilder {
 
 	BindingBuilder to(Class clazz, Closure config = null) {
 		this.impl = clazz
+		this.instanceConfigClosure = config
 		validateClassAssignment()
-		if (config) {
-			config.setDelegate(this)
-			config.call(this)
-		}
 		return this
 	}
 
 	BindingBuilder withScope(Scope s) {
 		this.scope = s
 		return this
-	}
-
-	void bindForThis(Class clazz, Class impl) {
-		this.innerBindings.put(clazz, impl)
-	}
-
-	void bindForThis(String property, Object value) {
-		this.boundProperties.put(property, value)
 	}
 
 	void inheritScope(Scope s) {
@@ -58,7 +48,7 @@ class BindingBuilder {
 
 
 
-	Binding[] resolveConstructorParams(Constructor constructor, ContextBuilder ctxBuilder) {
+	Binding[] resolveConstructorParams(Constructor constructor) {
 		Class[] constructorParams = constructor.getParameterTypes()
 		Annotation[][] allAnnotations = constructor.getParameterAnnotations()
 
@@ -76,7 +66,7 @@ class BindingBuilder {
 		return paramBindings
 	}
 
-	Binding buildContextRefBinding(Class baseType, ContextBuilder ctxBuilder) {
+	Binding buildContextRefBinding(Class baseType) {
 		log.trace("buildBindingForClass: baseType=${name(baseType)}")
 		if (!ctxBuilder.containsBindingFor(baseType)) {
 			throw new InvalidConfigurationException("The Constructor for Class: ${name(impl)} has a parameter ")
@@ -125,11 +115,20 @@ class BindingBuilder {
 		}
 	}
 
-	Binding build(ContextBuilder ctxBuilder) throws InvalidConfigurationException {
+	Binding build() throws InvalidConfigurationException {
+		inheritScope(this.ctxBuilder.getDefaultScope())
 		Constructor constructor = resolveConstructor(this.impl)
-		Binding[] params = resolveConstructorParams(constructor, ctxBuilder)
+		Binding[] params = resolveConstructorParams(constructor)
 
-		return new BasicBinding(from, impl, params)
+		InstanceGenerator gen = new InstanceGenerator(this.impl, params, instanceConfigClosure)
+		return createBinding(gen)
 
+	}
+
+	protected Binding createBinding(InstanceGenerator instanceGenerator) {
+
+		if (scope == Scope.ALWAYS_CREATE_NEW) {
+			return new BasicBinding()
+		}
 	}
 }
