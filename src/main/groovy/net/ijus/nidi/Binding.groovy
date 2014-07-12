@@ -14,4 +14,6 @@ public interface Binding {
 	Scope getScope()
 
 	void validate()
+
+	InstanceGenerator getInstanceGenerator()
 }

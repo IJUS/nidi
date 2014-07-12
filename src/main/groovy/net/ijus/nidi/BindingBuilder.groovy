@@ -61,7 +61,7 @@ class BindingBuilder {
 		for (int paramIdx = 0; paramIdx < constructorParams.length; paramIdx++) {
 			Class paramType = constructorParams[paramIdx]
 
-			paramBindings[paramIdx] = buildContextRefBinding(paramType, ctxBuilder)
+			paramBindings[paramIdx] = buildContextRefBinding(paramType)
 		}
 		return paramBindings
 	}
@@ -126,9 +126,15 @@ class BindingBuilder {
 	}
 
 	protected Binding createBinding(InstanceGenerator instanceGenerator) {
-
-		if (scope == Scope.ALWAYS_CREATE_NEW) {
-			return new BasicBinding()
+		Binding b
+		if (!this.scope) {
+			inheritScope(this.ctxBuilder.getDefaultScope())
 		}
+		if (this.scope == Scope.ALWAYS_CREATE_NEW) {
+			b = new BasicBinding(this.from, instanceGenerator)
+		} else {
+			b = new CacheingBinding(instanceGenerator, this.from, this.scope)
+		}
+		return b
 	}
 }

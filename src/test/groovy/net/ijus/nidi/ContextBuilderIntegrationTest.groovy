@@ -10,17 +10,31 @@ import spock.lang.Specification
 
 public class ContextBuilderIntegrationTest extends Specification {
 
-	void "Contexts should be created with bindings of the correct scope"() {
+	void "Bindings should inherit scope from the context builder if no override is present"(){
 		setup:
 		ContextBuilder builder = new ContextBuilder()
-		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.SINGLETON)
+		builder.bind(LoggingService).to(LoggingServiceImpl)
+		builder.setDefaultScope(Scope.ONE_PER_BINDING)
+
+		when:
+		Context ctx = builder.build()
+
+		then:
+		def binding = ctx.getBindingForClass(LoggingService)
+		binding.getScope() == Scope.ONE_PER_BINDING
+	}
+
+	void "Bindings should be created with the correct scope when one is specified"() {
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.CONTEXT_GLOBAL)
 
 		when:
 		Context ctx = builder.build()
 		Binding b = ctx.getBindingForClass(LoggingService)
 
 		then:
-		b.getScope() == Scope.SINGLETON
+		b.getScope() == Scope.CONTEXT_GLOBAL
 
 		when:
 		def serv1 = ctx.getInstance(LoggingService)

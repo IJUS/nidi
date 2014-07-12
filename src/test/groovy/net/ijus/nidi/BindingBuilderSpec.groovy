@@ -43,6 +43,7 @@ public class BindingBuilderSpec extends Specification {
 		setup:
 		ContextBuilder ctxBuilder = Mock()
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, null)
+		builder.ctxBuilder = ctxBuilder
 		builder.to(BasicCCProcessor)
 
 		when:
@@ -65,7 +66,7 @@ public class BindingBuilderSpec extends Specification {
 		Constructor constructor = BasicCCProcessor.getConstructor()
 
 		when:
-		Binding[] result = basicTestBuilder.resolveConstructorParams(constructor, ctxBuilder)
+		Binding[] result = basicTestBuilder.resolveConstructorParams(constructor)
 
 		then:
 		result.length == 0
@@ -81,7 +82,7 @@ public class BindingBuilderSpec extends Specification {
 		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)
 
 		when:
-		Binding[] paramBindings = basicTestBuilder.resolveConstructorParams(constructor, ctxBuilder)
+		Binding[] paramBindings = basicTestBuilder.resolveConstructorParams(constructor)
 
 		then:
 		paramBindings.length == 2

@@ -40,4 +40,9 @@ public class BasicBinding implements Binding {
 	void validate() {
 		throw new Exception("method validate() has not been implemented yet. write me!")
 	}
+
+	@Override
+	InstanceGenerator getInstanceGenerator() {
+		return instanceGenerator
+	}
 }

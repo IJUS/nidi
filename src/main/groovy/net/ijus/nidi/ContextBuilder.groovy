@@ -35,9 +35,7 @@ public class ContextBuilder {
 	Context build() throws InvalidConfigurationException {
 		log.debug("Building Context with ${ctxBindings.size()} Bindings in the root context")
 		ctxBindings.each{Class key, BindingBuilder builder->
-			if (!builder.scope) {
-				builder.setScope(defaultScope)
-			}
+			builder.inheritScope(defaultScope)
 			builder.validateClassAssignment()
 			Binding binding = builder.build()
 			log.debug("Adding Binding: ${binding} to the Context")
