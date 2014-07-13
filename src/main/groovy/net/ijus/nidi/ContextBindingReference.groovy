@@ -58,23 +58,22 @@ public class ContextBindingReference implements Binding {
 
 	Binding getResolvedBinding() {
 		if (!resolvedBinding) {
-			createResolvedBinding()
+			this.resolvedBinding = createResolvedBinding()
 		}
 		return resolvedBinding
 	}
 
-	void createResolvedBinding(){
+	Binding createResolvedBinding(){
 		Binding b = ctx.getBindingForClass(this.boundClass)
 		if (!b) {
 			throw new InvalidConfigurationException("The Context does not contain a Binding for class: ${boundClass.name}. Perhaps the referenced Binding trying to be created to early")
 		}
 		Scope s = b.getScope()
 		log.debug("Resolving binding for class: ${this.boundClass.name} with scope: ${s}")
-		if (scope == Scope.ONE_PER_BINDING) {
-			resolvedBinding = new CacheingBinding(b.getInstanceGenerator(), this.boundClass, Scope.ONE_PER_BINDING)
-		} else {
-			resolvedBinding = b
-		}
 
+		if (s == Scope.ONE_PER_BINDING) {
+			b = new CacheingBinding(b.getInstanceGenerator(), this.boundClass, Scope.ONE_PER_BINDING)
+		}
+		return b
 	}
 }

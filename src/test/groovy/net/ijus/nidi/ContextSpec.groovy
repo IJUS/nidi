@@ -11,6 +11,8 @@ import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService;
 import spock.lang.Specification
 
+import static net.ijus.nidi.Configuration.*
+
 /**
  * Created by pfried on 6/17/14.
  */
@@ -23,8 +25,7 @@ public class ContextSpec extends Specification {
 
 	void "context should handle instantiating objects with nested dependencies"(){
 		setup:
-		Context ctx = new Context()
-		Configuration.configure(ctx){
+		Context ctx = configureNew{
 			bind(CreditCardProcessor).to(ComplexCCProcessor)
 			bind(FraudDetectionService).to(FraudDetectorImpl)
 			bind(LoggingService).to(LoggingServiceImpl)
@@ -43,8 +44,9 @@ public class ContextSpec extends Specification {
 
 	void "context should get basic instance correctly"() {
 		setup:
-		Context ctx = new Context()
-		ctx.bind(CreditCardProcessor).to(BasicCCProcessor)
+		Context ctx = configureNew{
+			bind(CreditCardProcessor).to(BasicCCProcessor)
+		}
 
 		when:
 		def instance = ctx.getInstance(CreditCardProcessor)
