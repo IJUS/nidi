@@ -46,7 +46,7 @@ public class ConfigurationSpec extends Specification {
 
 		then:
 		notThrown(InvalidConfigurationException)
-		ctx.getBindings().size() == 3
+		ctx.bindingsMap.size() == 3
 
 		cleanup:
 		System.clearProperty(CONFIG_PROPERTY_NAME)
@@ -54,21 +54,21 @@ public class ConfigurationSpec extends Specification {
 
 	void "Configuration should work by specifying a class name as a string"(){
 		setup:
-		Context ctx = new Context()
+		ContextBuilder builder = new ContextBuilder()
 
 		when:
-		configure(ctx, "com.example.config.ExampleConfigScript")
+		configure(builder, "com.example.config.ExampleConfigScript")
 
 		then:
-		ctx.getBindings().size() == 3
-		ctx.getBinding(CreditCardProcessor).implementationClass == ComplexCCProcessor
-		ctx.getBinding(LoggingService).implementationClass == LoggingServiceImpl
+		builder.ctxBindings.size() == 3
+		builder.ctxBindings.get(CreditCardProcessor).impl == ComplexCCProcessor
+		builder.ctxBindings.get(LoggingService).impl == LoggingServiceImpl
+
 	}
 
 	def "a properly configured context should provide a basic implementation of an interface"(){
 		setup:
-		Context ctx = new Context()
-		configure(ctx) {
+		Context ctx = configureNew {
 			bind(CreditCardProcessor).to(BasicCCProcessor)
 		}
 
@@ -81,41 +81,40 @@ public class ConfigurationSpec extends Specification {
 
 	def "configuration should work with closures"() {
 		setup:
-		Context ctx = new Context()
+		ContextBuilder builder = new ContextBuilder()
 
 		when: "bind basic class with a closure"
-		configure(ctx){
+		configure(builder){
 			bind(CreditCardProcessor).to(BasicCCProcessor)
 		}
 
 		then:
 		notThrown(InvalidConfigurationException)
-		ctx.bindings.size() == 1
-		Binding b = ctx.getBinding(CreditCardProcessor)
-		b != null
-		b.getImplementationClass() == BasicCCProcessor
-
+		builder.ctxBindings.size() == 1
+		BindingBuilder bb = builder.ctxBindings.get(CreditCardProcessor)
+		bb != null
+		bb.impl == BasicCCProcessor
 
 	}
 
 	void "attempting to configure a context using a class that doesn't exist should throw an error"() {
 		given: "a dummy context"
-		Context ctx = new Context()
+		ContextBuilder builder = new ContextBuilder()
 
 		when: "try to configure using fqcn of non-existant class"
-		configure(ctx, "com.somepackage.NonExistantClass")
+		configure(builder, "com.somepackage.NonExistantClass")
 
 		then: "Error shoulld be thrown"
 		thrown(InvalidConfigurationException)
 
 		when: "Attempt to configure with real class that does not implement ContextConfig"
-		configure(ctx, BasicBinding)
+		configure(builder, BasicBinding)
 
 		then: "Error should be thrown"
 		thrown(InvalidConfigurationException)
 
 		when: "try to conifgure with fqcn of a class that does not implement ContextConfig"
-		configure(ctx, "com.example.impl.BasicCCProcessor")
+		configure(builder, "com.example.impl.BasicCCProcessor")
 
 		then:
 		thrown(InvalidConfigurationException)

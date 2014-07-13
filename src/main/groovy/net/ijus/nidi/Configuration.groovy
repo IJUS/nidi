@@ -10,20 +10,20 @@ import groovy.transform.CompileStatic
 public class Configuration {
 	public static final String CONFIG_PROPERTY_NAME = "nidi.context.class"
 
-	static void setMainContextFromClassName(String configClassName) {
+	static void setMainContextFromClassName(String configClassName) throws InvalidConfigurationException {
 		ContextHolder.setContext(configureNew(configClassName))
 	}
 
-	static void setMainContextFromClass(Class<? extends ContextConfig> clazz) {
+	static void setMainContextFromClass(Class<? extends ContextConfig> clazz) throws InvalidConfigurationException {
 		ContextHolder.setContext(configureNew(clazz))
 	}
 
-	static void setMainContextFromSystemProperty(){
+	static void setMainContextFromSystemProperty() throws InvalidConfigurationException {
 		Context ctx = configureNewFromSystemProperty()
 		ContextHolder.setContext(ctx)
 	}
 
-	static Context configureNewFromSystemProperty(){
+	static Context configureNewFromSystemProperty() throws InvalidConfigurationException {
 		String ctxClass = System.getProperty(CONFIG_PROPERTY_NAME)
 		if (!ctxClass) {
 			throw new InvalidConfigurationException("The nidi Context could not be created because no System property was set. Set the System property \"nidi.context.class\" to the fully qualified class name of a class that implements ContextConfig")
@@ -32,61 +32,80 @@ public class Configuration {
 		return configureNew(ctxClass)
 	}
 
-	static Context configureNew(String fqcn) {
-		Context ctx = new Context()
-		configure(ctx, fqcn)
-		return ctx
+	static Context configureNew(String fqcn) throws InvalidConfigurationException {
+		ContextBuilder builder = new ContextBuilder()
+		configure(builder, fqcn)
+		return build(builder)
 	}
 
-	static Context configureNew(Class<? extends ContextConfig> clazz) {
-		Context ctx = new Context()
-		configure(ctx, clazz)
-		return ctx
+	static Context configureNew(Class<? extends ContextConfig> clazz) throws InvalidConfigurationException {
+		ContextBuilder builder = new ContextBuilder()
+
+		configure(builder, clazz)
+
+		return build(builder)
 	}
 
-	static Context configureNew(Closure closure) {
-		Context ctx = new Context()
-		configure(ctx, closure)
-		return ctx
+	static Context configureNew(Closure closure) throws InvalidConfigurationException {
+		ContextBuilder builder = new ContextBuilder()
+		configure(builder, closure)
+		return build(builder)
 	}
 
-	static Context configureNew(ContextConfig config) {
-		Context ctx = new Context()
-		configure(ctx, config)
-		return ctx
+	static Context configureNew(ContextConfig config) throws InvalidConfigurationException {
+		ContextBuilder builder = new ContextBuilder()
+		configure(builder, config)
+		return build(builder)
+	}
+
+	/**
+	 * validates the builder, then builds and returns the Context
+	 * @param builder
+	 * @return a validated Context
+	 */
+	static Context build(ContextBuilder builder) throws InvalidConfigurationException {
+
+		//TODO: validate
+		return builder.build()
 	}
 
 
-	static void configure(Context ctx, String fqcn) {
+	//////////////////////////////////////////////////////////////////////////
+	////////   Void configure methods
+	/////////////////////////////////////////////////////////////////////////
+
+
+	static void configure(ContextBuilder builder, String fqcn) throws InvalidConfigurationException {
 		try {
 			Class configClass = Class.forName(fqcn)
-			configure(ctx, configClass)
+			configure(builder, configClass)
 		} catch (ClassNotFoundException e) {
-			throw new InvalidConfigurationException("Attempted to configure context: ${ctx} using the class: ${fqcn}, but the class was not found on the classpath")
+			throw new InvalidConfigurationException("Attempted to configure contextBuilder: ${builder} using the class: ${fqcn}, but the class was not found on the classpath")
 		}
 	}
 
-	static void configure(Context ctx, Class configClass) {
-		if (!ContextConfig.isAssignableFrom(configClass)) {
-			throw new InvalidConfigurationException("Attempted to configure the Context: ${ctx} using the class: ${configClass.getCanonicalName()}, which is NOT a valid implementation of ContextConfig")
-		}
+	static void configure(ContextBuilder builder, Class configClass) throws InvalidConfigurationException {
 		def config
 		try {
 			config = configClass.newInstance()
 		} catch (Throwable t) {
 			throw new InvalidConfigurationException("Error instantiating the configuration class: ${configClass.getCanonicalName()}", t)
 		}
-		configure(ctx, config as ContextConfig)
+
+		if (!(config instanceof ContextConfig)) {
+			throw new InvalidConfigurationException("The Class: ${configClass.name} does not implement ContextConfig")
+		}
+		configure(builder, config as ContextConfig)
 	}
 
-	static void configure(Context ctx, Closure closure) {
-		closure.setDelegate(ctx)
-		closure.call(ctx)
+	static void configure(ContextBuilder builder, Closure closure) throws InvalidConfigurationException {
+		closure.setDelegate(builder)
+		closure.call(builder)
 	}
 
-	static void configure(Context ctx, ContextConfig config) {
-		//TODO: write me
-		assert "method was written" == "false"
+	static void configure(ContextBuilder builder, ContextConfig config) throws InvalidConfigurationException {
+		config.configure(builder)
+
 	}
 
 

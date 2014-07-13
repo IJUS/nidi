@@ -24,14 +24,6 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, null)
 
 		when:
-		builder.to(BasicCCProcessor){
-			scope = Scope.ONE_PER_BINDING
-		}
-
-		then:
-		builder.scope == Scope.ONE_PER_BINDING
-
-		when:
 		builder.withScope(Scope.SINGLETON)
 
 		then:
@@ -39,10 +31,11 @@ public class BindingBuilderSpec extends Specification {
 
 	}
 
-	void "Building a binding with a 0-arg constructor should return a basic binding"(){
+	void "Building a binding with the scope ALWAYS_CREATE_NEW should return a basic binding"(){
 		setup:
 		ContextBuilder ctxBuilder = Mock()
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, null)
+		builder.scope = Scope.ALWAYS_CREATE_NEW
 		builder.ctxBuilder = ctxBuilder
 		builder.to(BasicCCProcessor)
 
@@ -50,6 +43,7 @@ public class BindingBuilderSpec extends Specification {
 		Binding result = builder.build()
 
 		then:
+		result instanceof BasicBinding
 		result.getBoundClass() == CreditCardProcessor
 		result.getImplClass() == BasicCCProcessor
 

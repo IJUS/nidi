@@ -18,14 +18,16 @@ class BindingBuilder {
 	Scope scope
 	Closure instanceConfigClosure
 
-	Map<Class, Class> innerBindings = [:]
-	Map<String, Object> boundProperties = [:]
-
 	Binding binding
 
 	BindingBuilder(Class clazz, ContextBuilder ctxBuilder) {
 		this.from = clazz
 		this.ctxBuilder = ctxBuilder
+	}
+
+	BindingBuilder setupInstance(Closure instanceSetupClosure) {
+		this.instanceConfigClosure = instanceSetupClosure
+		return this
 	}
 
 	BindingBuilder to(Class clazz, Closure config = null) {

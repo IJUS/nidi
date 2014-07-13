@@ -14,8 +14,6 @@ public class ContextTestUtils {
 
 	static void clearContextHolder(){
 		log.info("Resetting the ContextHolder")
-		ContextHolder.singletons.clear()
-		ContextHolder.singletonCache.clearCache()
 		ContextHolder.setContext(null)
 	}
 }
