@@ -3,6 +3,7 @@ package net.ijus.nidi.bindings
 import groovy.transform.CompileStatic
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
+import net.ijus.nidi.instantiation.InstanceGenerator
 
 /**
  * Created by pfried on 7/11/14.
@@ -12,13 +13,15 @@ import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 public class CacheingBinding implements Binding {
 
 	def cachedInstance
-	ConstructorInstanceGenerator instanceGenerator
+	InstanceGenerator instanceGenerator
 	Class boundClass
+	Class implClass
 	Scope scope
 
-	CacheingBinding(ConstructorInstanceGenerator instanceGenerator, Class boundClass, Scope scope) {
+	CacheingBinding(InstanceGenerator instanceGenerator, Class boundClass, Class implClass, Scope scope) {
 		this.instanceGenerator = instanceGenerator
 		this.boundClass = boundClass
+		this.implClass = implClass
 		validateScope(scope)
 		this.scope = scope
 	}
@@ -33,7 +36,7 @@ public class CacheingBinding implements Binding {
 
 	@Override
 	Class getImplClass() {
-		return this.instanceGenerator.clazz
+		return this.implClass
 	}
 
 	@Override
@@ -52,13 +55,13 @@ public class CacheingBinding implements Binding {
 	}
 
 	@Override
-	ConstructorInstanceGenerator getInstanceGenerator(){
+	InstanceGenerator getInstanceGenerator(){
 		this.instanceGenerator
 	}
 
 	void validateScope(Scope scope) throws InvalidConfigurationException {
 		if (!scope) {
-			throw new InvalidConfigurationException("The Scope for this binding cannot be null: CacheingScopedBinding for Class: ${boundClass.getCanonicalName()} to: ${instanceGenerator.getClazz().getCanonicalName()}")
+			throw new InvalidConfigurationException("The Scope for this binding cannot be null: CacheingScopedBinding for Class: ${boundClass.getCanonicalName()} to: ${implClass.getCanonicalName()}")
 
 		} else if (scope == Scope.ALWAYS_CREATE_NEW) {
 			throw new InvalidConfigurationException("The scope: ${scope} is not compatible with t")

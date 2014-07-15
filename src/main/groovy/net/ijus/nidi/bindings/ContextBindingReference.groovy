@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
+import net.ijus.nidi.instantiation.InstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -26,7 +27,7 @@ public class ContextBindingReference implements Binding {
 	}
 
 	@Override
-	getInstance() {
+	def getInstance() {
 		return getResolvedBinding().getInstance()
 	}
 
@@ -46,8 +47,8 @@ public class ContextBindingReference implements Binding {
 	}
 
 	@Override
-	ConstructorInstanceGenerator getInstanceGenerator() {
-		return null
+	InstanceGenerator getInstanceGenerator() {
+		return getResolvedBinding().getInstanceGenerator()
 	}
 
 	@Override
@@ -75,7 +76,7 @@ public class ContextBindingReference implements Binding {
 		log.debug("Resolving binding for class: ${this.boundClass.name} with scope: ${s}")
 
 		if (s == Scope.ONE_PER_BINDING) {
-			b = new CacheingBinding(b.getInstanceGenerator(), this.boundClass, Scope.ONE_PER_BINDING)
+			b = new CacheingBinding(b.getInstanceGenerator(), this.boundClass, b.getImplClass(), Scope.ONE_PER_BINDING)
 		}
 		return b
 	}

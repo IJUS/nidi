@@ -1,6 +1,6 @@
 package net.ijus.nidi.bindings
 
-import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
+import net.ijus.nidi.instantiation.InstanceGenerator
 
 /**
  * Created by pfried on 7/5/14.
@@ -9,14 +9,14 @@ import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 public class BasicBinding implements Binding {
 
 	public static final Scope SCOPE = Scope.ALWAYS_CREATE_NEW
-	ConstructorInstanceGenerator instanceGenerator
+	InstanceGenerator instanceGenerator
 	Class bound
 	Class impl
 
-	BasicBinding(Class boundClass, ConstructorInstanceGenerator instanceGenerator) {
+	BasicBinding(Class boundClass, Class implClass, InstanceGenerator instanceGenerator) {
 		this.bound = boundClass
 		this.instanceGenerator = instanceGenerator
-		this.impl = instanceGenerator.clazz
+		this.impl = implClass
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class BasicBinding implements Binding {
 	}
 
 	@Override
-	ConstructorInstanceGenerator getInstanceGenerator() {
+	InstanceGenerator getInstanceGenerator() {
 		return instanceGenerator
 	}
 }

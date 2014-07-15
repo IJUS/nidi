@@ -1,13 +1,9 @@
 package net.ijus.nidi.builder
 
-import net.ijus.nidi.bindings.BasicBinding
-import net.ijus.nidi.bindings.CacheingBinding
+import net.ijus.nidi.*
+import net.ijus.nidi.bindings.*
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
-import net.ijus.nidi.Context
-import net.ijus.nidi.bindings.ContextBindingReference
-import net.ijus.nidi.Inject
-import net.ijus.nidi.InvalidConfigurationException
-import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.instantiation.InstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -26,9 +22,9 @@ class BindingBuilder {
 	Scope scope
 	Closure instanceConfigClosure
 
-	ConstructorInstanceGenerator instanceGenerator
+	InstanceGenerator instanceGenerator
 
-	net.ijus.nidi.bindings.Binding binding
+	Binding binding
 
 	BindingBuilder(Class clazz, ContextBuilder ctxBuilder) {
 		this.from = clazz
@@ -64,15 +60,15 @@ class BindingBuilder {
 
 
 
-	net.ijus.nidi.bindings.Binding[] resolveConstructorParams(Constructor constructor) {
+	Binding[] resolveConstructorParams(Constructor constructor) {
 		Class[] constructorParams = constructor.getParameterTypes()
 		Annotation[][] allAnnotations = constructor.getParameterAnnotations()
 
 		if (constructorParams.length == 0) {
-			return new net.ijus.nidi.bindings.Binding[0]
+			return new Binding[0]
 		}
 
-		net.ijus.nidi.bindings.Binding[] paramBindings = new net.ijus.nidi.bindings.Binding[constructorParams.length]
+		Binding[] paramBindings = new Binding[constructorParams.length]
 
 		for (int paramIdx = 0; paramIdx < constructorParams.length; paramIdx++) {
 			Class paramType = constructorParams[paramIdx]
@@ -82,13 +78,13 @@ class BindingBuilder {
 		return paramBindings
 	}
 
-	net.ijus.nidi.bindings.Binding buildContextRefBinding(Class baseType) {
+	Binding buildContextRefBinding(Class baseType) {
 		log.trace("buildBindingForClass: baseType=${name(baseType)}")
 		if (!ctxBuilder.containsBindingFor(baseType)) {
 			throw new InvalidConfigurationException("The Constructor for Class: ${name(impl)} has a parameter ")
 		}
 		Context ctx = ctxBuilder.getContextRef()
-		net.ijus.nidi.bindings.Binding b = new ContextBindingReference(baseType, ctx)
+		Binding b = new ContextBindingReference(baseType, ctx)
 		log.debug("bindingBuilder returning ContextBindingReference for ${name(baseType)}")
 		return b
 	}
@@ -131,25 +127,25 @@ class BindingBuilder {
 		}
 	}
 
-	net.ijus.nidi.bindings.Binding build() throws InvalidConfigurationException {
+	Binding build() throws InvalidConfigurationException {
 		inheritScope(this.ctxBuilder.getDefaultScope())
 		Constructor constructor = resolveConstructor(this.impl)
-		net.ijus.nidi.bindings.Binding[] params = resolveConstructorParams(constructor)
+		Binding[] params = resolveConstructorParams(constructor)
 
 		ConstructorInstanceGenerator gen = new ConstructorInstanceGenerator(this.impl, params, instanceConfigClosure)
 		return createBinding(gen)
 
 	}
 
-	protected net.ijus.nidi.bindings.Binding createBinding(ConstructorInstanceGenerator instanceGenerator) {
-		net.ijus.nidi.bindings.Binding b
+	protected Binding createBinding(ConstructorInstanceGenerator instanceGenerator) {
+		Binding b
 		if (!this.scope) {
 			inheritScope(this.ctxBuilder.getDefaultScope())
 		}
 		if (this.scope == Scope.ALWAYS_CREATE_NEW) {
-			b = new BasicBinding(this.from, instanceGenerator)
+			b = new BasicBinding(this.from, this.impl, instanceGenerator)
 		} else {
-			b = new CacheingBinding(instanceGenerator, this.from, this.scope)
+			b = new CacheingBinding(instanceGenerator, this.from, this.impl, this.scope)
 		}
 		return b
 	}

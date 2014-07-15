@@ -16,7 +16,7 @@ public class CacheingBindingSpec extends Specification {
 	void "caching binding should always return the same instance of it's implementation"(){
 		setup:
 		ConstructorInstanceGenerator generator = GroovyMock(ConstructorInstanceGenerator)
-		CacheingBinding binding = new CacheingBinding(generator, CreditCardProcessor, Scope.SINGLETON)
+		CacheingBinding binding = new CacheingBinding(generator, CreditCardProcessor, BasicCCProcessor, Scope.SINGLETON)
 
 		when:
 		def result1 = binding.getInstance()
