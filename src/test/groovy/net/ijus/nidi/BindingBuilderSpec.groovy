@@ -5,6 +5,7 @@ import com.example.general.MultipleAnnotatedConstructors
 import com.example.general.UnannotatedConstructors
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
@@ -22,6 +23,43 @@ import java.lang.reflect.Constructor
 
 
 public class BindingBuilderSpec extends Specification {
+
+	void "constructor params with the @Bound annotation should be correctly identified"(){
+		setup:
+		def builder = new BindingBuilder(LoggingService, null)
+		Constructor constructor = NamespacedLoggingService.getConstructor(String)
+
+		when:
+		String[] result = builder.getBoundAnnotatedParams(constructor)
+
+		then:
+		result.length == 1
+		result[0] == 'stringProperty'
+
+	}
+
+	void "binding to a value of an incompatible class should throw an exception"(){
+		setup:
+		def builder = new BindingBuilder(Map, null)
+
+		when:
+		builder.toValue {['listItemOne', 'two', 'three']}
+
+		then:
+		thrown(InvalidConfigurationException)
+	}
+
+	void "binding to a closure should create an instanceGenerator"(){
+		setup:
+		BindingBuilder builder = new BindingBuilder(String, null)
+
+		when:
+		builder.toValue { "testValue" }
+
+		then:
+		builder.instanceGenerator != null
+		builder.instanceGenerator.createNewInstance() == "testValue"
+	}
 
 	void "setting the scope should work in a variety of ways"(){
 		setup:

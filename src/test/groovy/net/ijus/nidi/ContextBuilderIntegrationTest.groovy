@@ -1,6 +1,7 @@
 package net.ijus.nidi
 
 import com.example.impl.LoggingServiceImpl
+import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.LoggingService
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.ContextBuilder
@@ -11,6 +12,20 @@ import spock.lang.Specification
  */
 
 public class ContextBuilderIntegrationTest extends Specification {
+
+	void "Bindings should allow for specifying constructor params"(){
+		setup:
+		Context ctx = Configuration.configureNew{
+			bind(LoggingService).to(NamespacedLoggingService){
+				bindConstructorParam('stringProperty').toValue{ 'testString' }
+			}
+		}
+
+		expect:
+		def instance = ctx.getInstance(LoggingService)
+		instance instanceof NamespacedLoggingService
+		instance.stringProperty == 'testString'
+	}
 
 	void "Bindings should inherit scope from the context builder if no override is present"(){
 		setup:
