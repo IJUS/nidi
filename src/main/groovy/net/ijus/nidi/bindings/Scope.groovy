@@ -1,4 +1,4 @@
-package net.ijus.nidi;
+package net.ijus.nidi.bindings;
 
 /**
  * Created by pfried on 6/16/14.

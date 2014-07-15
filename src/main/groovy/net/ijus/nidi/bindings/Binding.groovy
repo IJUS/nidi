@@ -1,4 +1,6 @@
-package net.ijus.nidi
+package net.ijus.nidi.bindings
+
+import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 
 /**
  * Created by pfried on 6/16/14.
@@ -15,5 +17,5 @@ public interface Binding {
 
 	void validate()
 
-	InstanceGenerator getInstanceGenerator()
+	ConstructorInstanceGenerator getInstanceGenerator()
 }

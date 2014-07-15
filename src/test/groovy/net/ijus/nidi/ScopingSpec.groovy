@@ -3,6 +3,7 @@ package net.ijus.nidi
 import com.example.impl.BasicCCProcessor
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.RefundProcessor
+import net.ijus.nidi.bindings.Scope
 import spock.lang.*
 
 /**

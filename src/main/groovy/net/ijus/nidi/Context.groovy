@@ -9,10 +9,10 @@ import groovy.transform.CompileStatic
 @CompileStatic
 public class Context {
 
-	Map<Class, Binding> bindingsMap = [:]
+	Map<Class, net.ijus.nidi.bindings.Binding> bindingsMap = [:]
 
 
-	Binding getBindingForClass(Class clazz) {
+	net.ijus.nidi.bindings.Binding getBindingForClass(Class clazz) {
 		return bindingsMap.get(clazz)
 	}
 

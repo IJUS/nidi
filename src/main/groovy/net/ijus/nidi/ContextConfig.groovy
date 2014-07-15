@@ -1,6 +1,7 @@
 package net.ijus.nidi
 
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
+import net.ijus.nidi.builder.ContextBuilder;
 
 
 /**

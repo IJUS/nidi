@@ -6,8 +6,7 @@ import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
-import net.ijus.nidi.Context
-import net.ijus.nidi.ContextBuilder
+import net.ijus.nidi.builder.ContextBuilder
 import net.ijus.nidi.ContextConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory;

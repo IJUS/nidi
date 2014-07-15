@@ -7,6 +7,9 @@ import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
+import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.builder.BindingBuilder
+import net.ijus.nidi.builder.ContextBuilder
 import spock.lang.Specification
 
 /**
@@ -57,7 +60,7 @@ public class ContextBuilderSpec extends Specification {
 
 		then:
 		ctx.containsBinding(CreditCardProcessor)
-		Binding b = ctx.getBindingForClass(CreditCardProcessor)
+		net.ijus.nidi.bindings.Binding b = ctx.getBindingForClass(CreditCardProcessor)
 		b.boundClass == CreditCardProcessor
 		b.implClass == BasicCCProcessor
 	}

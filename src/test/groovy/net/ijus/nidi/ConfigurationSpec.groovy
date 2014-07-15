@@ -5,7 +5,11 @@ import com.example.impl.ComplexCCProcessor
 import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.LoggingService
-import com.example.interfaces.RefundProcessor;
+import com.example.interfaces.RefundProcessor
+import net.ijus.nidi.bindings.BasicBinding
+import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.builder.BindingBuilder
+import net.ijus.nidi.builder.ContextBuilder;
 import spock.lang.Specification
 
 import static net.ijus.nidi.Configuration.*

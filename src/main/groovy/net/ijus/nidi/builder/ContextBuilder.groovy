@@ -1,6 +1,9 @@
-package net.ijus.nidi
+package net.ijus.nidi.builder
 
 import groovy.transform.CompileStatic
+import net.ijus.nidi.Context
+import net.ijus.nidi.InvalidConfigurationException
+import net.ijus.nidi.bindings.Scope
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -37,7 +40,7 @@ public class ContextBuilder {
 		ctxBindings.each{Class key, BindingBuilder builder->
 			builder.inheritScope(defaultScope)
 			builder.validateClassAssignment()
-			Binding binding = builder.build()
+			net.ijus.nidi.bindings.Binding binding = builder.build()
 			log.debug("Adding Binding: ${binding} to the Context")
 			ctx.bindingsMap.put(binding.getBoundClass(), binding)
 		}

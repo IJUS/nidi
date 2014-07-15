@@ -2,6 +2,8 @@ package net.ijus.nidi
 
 import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.LoggingService
+import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.builder.ContextBuilder
 import spock.lang.Specification
 
 /**
@@ -31,7 +33,7 @@ public class ContextBuilderIntegrationTest extends Specification {
 
 		when:
 		Context ctx = builder.build()
-		Binding b = ctx.getBindingForClass(LoggingService)
+		net.ijus.nidi.bindings.Binding b = ctx.getBindingForClass(LoggingService)
 
 		then:
 		b.getScope() == Scope.CONTEXT_GLOBAL

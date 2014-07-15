@@ -1,6 +1,9 @@
-package net.ijus.nidi
+package net.ijus.nidi.bindings
 
 import groovy.transform.CompileStatic
+import net.ijus.nidi.Context
+import net.ijus.nidi.InvalidConfigurationException
+import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -43,7 +46,7 @@ public class ContextBindingReference implements Binding {
 	}
 
 	@Override
-	InstanceGenerator getInstanceGenerator() {
+	ConstructorInstanceGenerator getInstanceGenerator() {
 		return null
 	}
 

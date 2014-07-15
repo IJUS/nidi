@@ -7,7 +7,11 @@ import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
-import com.example.interfaces.LoggingService;
+import com.example.interfaces.LoggingService
+import net.ijus.nidi.bindings.BasicBinding
+import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.builder.BindingBuilder
+import net.ijus.nidi.builder.ContextBuilder;
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
@@ -40,7 +44,7 @@ public class BindingBuilderSpec extends Specification {
 		builder.to(BasicCCProcessor)
 
 		when:
-		Binding result = builder.build()
+		net.ijus.nidi.bindings.Binding result = builder.build()
 
 		then:
 		result instanceof BasicBinding
@@ -60,7 +64,7 @@ public class BindingBuilderSpec extends Specification {
 		Constructor constructor = BasicCCProcessor.getConstructor()
 
 		when:
-		Binding[] result = basicTestBuilder.resolveConstructorParams(constructor)
+		net.ijus.nidi.bindings.Binding[] result = basicTestBuilder.resolveConstructorParams(constructor)
 
 		then:
 		result.length == 0
@@ -76,7 +80,7 @@ public class BindingBuilderSpec extends Specification {
 		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)
 
 		when:
-		Binding[] paramBindings = basicTestBuilder.resolveConstructorParams(constructor)
+		net.ijus.nidi.bindings.Binding[] paramBindings = basicTestBuilder.resolveConstructorParams(constructor)
 
 		then:
 		paramBindings.length == 2

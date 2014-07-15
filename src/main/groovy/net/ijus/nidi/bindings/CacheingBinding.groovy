@@ -1,6 +1,8 @@
-package net.ijus.nidi
+package net.ijus.nidi.bindings
 
 import groovy.transform.CompileStatic
+import net.ijus.nidi.InvalidConfigurationException
+import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 
 /**
  * Created by pfried on 7/11/14.
@@ -10,11 +12,11 @@ import groovy.transform.CompileStatic
 public class CacheingBinding implements Binding {
 
 	def cachedInstance
-	InstanceGenerator instanceGenerator
+	ConstructorInstanceGenerator instanceGenerator
 	Class boundClass
 	Scope scope
 
-	CacheingBinding(InstanceGenerator instanceGenerator, Class boundClass, Scope scope) {
+	CacheingBinding(ConstructorInstanceGenerator instanceGenerator, Class boundClass, Scope scope) {
 		this.instanceGenerator = instanceGenerator
 		this.boundClass = boundClass
 		validateScope(scope)
@@ -50,7 +52,7 @@ public class CacheingBinding implements Binding {
 	}
 
 	@Override
-	InstanceGenerator getInstanceGenerator(){
+	ConstructorInstanceGenerator getInstanceGenerator(){
 		this.instanceGenerator
 	}
 
