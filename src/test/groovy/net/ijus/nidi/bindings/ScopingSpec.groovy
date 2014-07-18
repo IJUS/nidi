@@ -1,8 +1,11 @@
-package net.ijus.nidi
+package net.ijus.nidi.bindings
 
 import com.example.impl.BasicCCProcessor
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.RefundProcessor
+import net.ijus.nidi.Configuration
+import net.ijus.nidi.Context
+import net.ijus.nidi.ContextTestUtils
 import net.ijus.nidi.bindings.Scope
 import spock.lang.*
 

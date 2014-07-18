@@ -1,4 +1,4 @@
-package net.ijus.nidi
+package net.ijus.nidi.bindings
 
 import com.example.impl.BasicCCProcessor
 import com.example.interfaces.CreditCardProcessor

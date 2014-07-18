@@ -1,4 +1,4 @@
-package net.ijus.nidi
+package net.ijus.nidi.builder
 
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
@@ -7,6 +7,8 @@ import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
+import net.ijus.nidi.Context
+import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.BindingBuilder
 import net.ijus.nidi.builder.ContextBuilder

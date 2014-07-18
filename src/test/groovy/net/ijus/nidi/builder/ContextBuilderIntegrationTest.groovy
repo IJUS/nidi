@@ -1,8 +1,10 @@
-package net.ijus.nidi
+package net.ijus.nidi.builder
 
 import com.example.impl.LoggingServiceImpl
 import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.LoggingService
+import net.ijus.nidi.Configuration
+import net.ijus.nidi.Context
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.ContextBuilder
 import spock.lang.Specification
