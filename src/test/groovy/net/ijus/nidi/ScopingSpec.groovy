@@ -119,7 +119,7 @@ class ScopingSpec extends Specification {
 			bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor).setupInstance { BasicCCProcessor proc ->
 				proc.someProperty = "customValue"
 			}
-			bind(RefundProcessor).to(BasicCCProcessor)
+			bind(RefundProcessor).reference(CreditCardProcessor)
 		}
 
 		when: "get instances for both implementations"

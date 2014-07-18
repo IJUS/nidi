@@ -5,12 +5,13 @@ import com.example.general.MultipleAnnotatedConstructors
 import com.example.general.UnannotatedConstructors
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.LoggingServiceImpl
 import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
-import net.ijus.nidi.bindings.BasicBinding
-import net.ijus.nidi.bindings.Scope
+import com.example.interfaces.RefundProcessor
+import net.ijus.nidi.bindings.*
 import net.ijus.nidi.builder.BindingBuilder
 import net.ijus.nidi.builder.ContextBuilder;
 import spock.lang.Specification
@@ -23,6 +24,57 @@ import java.lang.reflect.Constructor
 
 
 public class BindingBuilderSpec extends Specification {
+
+	void "binding to a reference to another binding should result in a context reference binding"(){
+		setup:
+		Context ctx = GroovyMock()
+		Binding refBinding = Mock()
+		refBinding.getBoundClass() >> CreditCardProcessor
+		refBinding.getImplClass() >> BasicCCProcessor
+		refBinding.getInstance() >> new BasicCCProcessor()
+		ctx.getBindingForClass(CreditCardProcessor) >> refBinding
+		ContextBuilder ctxBuilder = GroovyMock()
+		ctxBuilder.getContextRef() >> ctx
+		ctxBuilder.containsBindingFor(CreditCardProcessor) >> true
+
+		BindingBuilder builder = new BindingBuilder(RefundProcessor, ctxBuilder)
+
+		when:
+		builder.reference(CreditCardProcessor)
+		Binding binding = builder.build()
+
+		then:
+		binding instanceof ContextBindingReference
+		binding.getBoundClass() == RefundProcessor
+		((ContextBindingReference)binding).getCtx() == ctx
+		binding.getImplClass() == BasicCCProcessor
+		binding.getInstance() instanceof BasicCCProcessor
+	}
+
+	void "validating class assignments should throw InvalidConfigurationException when there's a problem"(){
+		when:
+		BindingBuilder b1 = new BindingBuilder(LoggingService, null)
+		b1.@impl = BasicCCProcessor
+		b1.validateClassAssignment()
+
+		then:
+		thrown(InvalidConfigurationException)
+
+		when:
+		BindingBuilder b2 = new BindingBuilder(LoggingService, null)
+		b2.@impl = LoggingServiceImpl
+		b2.validateClassAssignment()
+
+		then:
+		notThrown(InvalidConfigurationException)
+
+		when:
+		BindingBuilder b3 = new BindingBuilder(LoggingService, null)
+		b3.validateClassAssignment()
+
+		then:
+		thrown(InvalidConfigurationException)
+	}
 
 	void "constructor params with the @Bound annotation should be correctly identified"(){
 		setup:

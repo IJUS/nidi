@@ -16,20 +16,61 @@ import java.lang.reflect.Constructor
 
 class BindingBuilder {
 	static final Logger log = LoggerFactory.getLogger(BindingBuilder)
+
+	/**
+	 * if the bindingBuilder is finalized, then no other modifications may be made to it.
+	 */
+	boolean isFinalized = false
+
+	/**
+	 * always has a reference to the parent context builder
+	 */
 	ContextBuilder ctxBuilder
-	Class from
-	Class impl
+
+	/**
+	 * The base class for this binding. In most cases, an Interface or Abstract class
+	 */
+	Class baseClass
+
+	/**
+	 * Specified scope for the binding. Will inherit from the context builder if not specified
+	 */
 	Scope scope
+
+	/**
+	 * If this property is set, this is the closure that will get called to setup properties on a newly created instance
+	 */
 	Closure instanceConfigClosure
 
+	/**
+	 * Holds BindingBuilders that are meant to override the bindings in the parent context.
+	 */
+	Map<Object, BindingBuilder> innerBindings = [:]
+
+
+	////////// Ways to specify an implementation. One of these must be set in order to create a valid binding ///////////
+	/**
+	 * Instance Generator simply provides an instance of the implementation, whatever it may be
+	 */
 	InstanceGenerator instanceGenerator
+
+	/**
+	 * The Class of whatever will be filling the roll of the base class. baseClass.isAssignableFrom(impl) must be true!
+	 */
+	Class impl
+
+	/**
+	 * If this binding simply references another binding in the context, then this property will be set. Either the impl,
+	 * or the bindingReferenceClass can be set, but never both. Referencing another Binding is for situations where a single
+	 * concrete implementation will be bound to two separate base classes, and it is important to preserve the scope of that
+	 * instance, usually when a singleton is desired.
+	 */
+	Class bindingReferenceClass //set if reference() is called to reference another binding
 
 	Binding binding
 
-	Map<Object, BindingBuilder> innerBindings = [:]
-
 	BindingBuilder(Class clazz, ContextBuilder ctxBuilder) {
-		this.from = clazz
+		this.baseClass = clazz
 		this.ctxBuilder = ctxBuilder
 	}
 
@@ -54,6 +95,7 @@ class BindingBuilder {
 	 * @return this BindingBuilder for chaining
 	 */
 	BindingBuilder setupInstance(Closure instanceSetupClosure) {
+		checkFinalization()
 		this.instanceConfigClosure = instanceSetupClosure
 		return this
 	}
@@ -83,6 +125,7 @@ class BindingBuilder {
 	 * @return this BindingBuilder for chained method calls
 	 */
 	BindingBuilder to(Class clazz, Closure config = null) {
+		checkFinalization()
 		this.impl = clazz
 		validateClassAssignment()
 
@@ -91,6 +134,16 @@ class BindingBuilder {
 			config.call()
 		}
 		return this
+	}
+
+	void reference(Class otherBaseClass) {
+		checkFinalization()
+		if (this.impl || this.instanceGenerator) {
+			throw new InvalidConfigurationException("The BindingBuilder for ${name(baseClass)} attempted to reference another Binding for ${name(otherBaseClass)}, but the Implementation class was already specified as: ${name(impl)}")
+		}
+
+		this.bindingReferenceClass = otherBaseClass
+		this.isFinalized = true
 	}
 
 	/**
@@ -102,6 +155,7 @@ class BindingBuilder {
 	 * @return
 	 */
 	BindingBuilder toValue(Closure closure) {
+		checkFinalization()
 		this.instanceGenerator = closure as InstanceGenerator
 
 		try {
@@ -111,7 +165,7 @@ class BindingBuilder {
 		} catch (InvalidConfigurationException e){
 			throw e
 		} catch (Exception e) {
-			throw new InvalidConfigurationException("Attempted to bind ${name(from)} to the value of a closure, but the closure threw an exception", e)
+			throw new InvalidConfigurationException("Attempted to bind ${name(baseClass)} to the value of a closure, but the closure threw an exception", e)
 		}
 		return this
 	}
@@ -122,6 +176,7 @@ class BindingBuilder {
 	 * @return
 	 */
 	BindingBuilder withScope(Scope s) {
+		checkFinalization()
 		this.scope = s
 		return this
 	}
@@ -133,6 +188,7 @@ class BindingBuilder {
 	 * @return
 	 */
 	BindingBuilder bindConstructorParam(String param) {
+		checkFinalization()
 		if (!this.impl) {
 			throw new InvalidConfigurationException("Cannot create bindings for constructor params before the implementation class has been specified")
 		}
@@ -242,14 +298,14 @@ class BindingBuilder {
 		return resolvedBinding
 	}
 
-	protected Binding buildContextRefBinding(Class baseType) {
-		log.trace("buildBindingForClass: baseType=${name(baseType)}")
-		if (!ctxBuilder.containsBindingFor(baseType)) {
-			throw new InvalidConfigurationException("The Constructor for Class: ${name(impl)} has a parameter ")
+	protected Binding buildContextRefBinding(Class refClass, Class provides = null) {
+		log.trace("buildContextRefBinding: baseType=${name(refClass)}")
+		if (!ctxBuilder.containsBindingFor(refClass)) {
+			throw new InvalidConfigurationException("Attempted to reference a Binding for ${refClass} in the ContextBuilder, but no Binding for that class has been declared")
 		}
 		Context ctx = ctxBuilder.getContextRef()
-		Binding b = new ContextBindingReference(baseType, ctx)
-		log.debug("bindingBuilder returning ContextBindingReference for ${name(baseType)}")
+		Binding b = new ContextBindingReference(refClass, ctx, provides)
+		log.debug("bindingBuilder returning ContextBindingReference for ${name(refClass)}")
 		return b
 	}
 
@@ -283,12 +339,15 @@ class BindingBuilder {
 		name
 	}
 
-	protected void validateClassAssignment() {
-		if (!impl) {
-			throw new InvalidConfigurationException("The Class: ${name(from)} was declared to be bound but the implementation class is null")
-		} else if (!from.isAssignableFrom(impl)) {
-			throw new InvalidConfigurationException("The Class: ${name(from)} was bound to ${name(impl)} but ${impl.getSimpleName()} is not a ${from.getSimpleName()}")
+	void validateClassAssignment() {
+		if (!impl && !bindingReferenceClass) {
+			throw new InvalidConfigurationException("The Class: ${name(baseClass)} was declared to be bound but the implementation class is null")
+
+		} else if (impl && !baseClass.isAssignableFrom(impl)) {
+			throw new InvalidConfigurationException("The Class: ${name(baseClass)} was bound to ${name(impl)} but it is not a ${baseClass.getSimpleName()}")
+
 		}
+
 	}
 
 	/**
@@ -297,8 +356,26 @@ class BindingBuilder {
 	 * @throws InvalidConfigurationException
 	 */
 	Binding build() throws InvalidConfigurationException {
+		log.trace("Started building Binding for ${name(this.baseClass)}")
 		inheritScope(this.ctxBuilder.getDefaultScope())
+		this.isFinalized = true
+		Binding b
+		if (this.bindingReferenceClass) {
+			b = buildContextRefBinding(this.bindingReferenceClass, this.baseClass)
 
+		} else if (this.impl) {
+			b = buildNormalBinding()
+
+		} else {
+			//oh no! what do we do?
+			throw new InvalidConfigurationException("Attempted to build the binding for ${name(this.baseClass)} but no implementation has been specified")
+		}
+		log.debug("Finished building Binding for ${name(this.baseClass)}, result= ${b}")
+		return b
+	}
+
+
+	protected Binding buildNormalBinding(){
 		/*
 		The instance generator could already be set by a call to `toValue(Closure)`. If so, then we'll want to keep it.
 		Otherwise, we'll create our own InstanceGenerator.
@@ -316,21 +393,26 @@ class BindingBuilder {
 		were specified in the config.
 		 */
 		if (!innerBindings.isEmpty()) {
-			throw new InvalidConfigurationException("The Binding for class: ${name(from)} has extra ${innerBindings.size()} innerBinding(s) specified. The innerBindings: ${innerBindings.keySet()} are not used by anything. This likely indicates an error in the Context Configuration")
+			throw new InvalidConfigurationException("The Binding for class: ${name(baseClass)} has extra ${innerBindings.size()} innerBinding(s) specified. The innerBindings: ${innerBindings.keySet()} are not used by anything. This likely indicates an error in the Context Configuration")
 		}
 
-		return createBinding(gen)
-
+		return createBindingForInstanceGenerator(gen)
 	}
 
-	protected Binding createBinding(InstanceGenerator instanceGenerator) {
+	protected Binding createBindingForInstanceGenerator(InstanceGenerator instanceGenerator) {
 		Binding b
 
 		if (this.scope == Scope.ALWAYS_CREATE_NEW) {
-			b = new BasicBinding(this.from, this.impl, instanceGenerator)
+			b = new BasicBinding(this.baseClass, this.impl, instanceGenerator)
 		} else {
-			b = new CacheingBinding(instanceGenerator, this.from, this.impl, this.scope)
+			b = new CacheingBinding(instanceGenerator, this.baseClass, this.impl, this.scope)
 		}
 		return b
+	}
+
+	protected void checkFinalization() throws InvalidConfigurationException {
+		if (this.isFinalized) {
+			throw new InvalidConfigurationException("Attempted to modify a BindingBuilder that has already been finalized. No means no!")
+		}
 	}
 }

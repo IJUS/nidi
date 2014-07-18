@@ -24,12 +24,12 @@ public class ConfigurationSpec extends Specification {
 		ContextTestUtils.clearContextHolder()
 	}
 
-	void "Bindings that are scoped as singletons should all reference the same class instance for a given implementation"(){
+	void "Binding references should provide the same implementation and scope as the referenced binding"(){
 		given: "create a context with two singleton bindings"
 		Context ctx = configureNew {
 			defaultScope = Scope.SINGLETON
 			bind(CreditCardProcessor).to(BasicCCProcessor)
-			bind(RefundProcessor).to(BasicCCProcessor)
+			bind(RefundProcessor).reference(CreditCardProcessor)
 		}
 
 		when:
@@ -108,7 +108,7 @@ public class ConfigurationSpec extends Specification {
 		when: "try to configure using fqcn of non-existant class"
 		configure(builder, "com.somepackage.NonExistantClass")
 
-		then: "Error shoulld be thrown"
+		then: "Error should be thrown"
 		thrown(InvalidConfigurationException)
 
 		when: "Attempt to configure with real class that does not implement ContextConfig"

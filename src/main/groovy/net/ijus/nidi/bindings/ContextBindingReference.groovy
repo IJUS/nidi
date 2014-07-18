@@ -3,7 +3,6 @@ package net.ijus.nidi.bindings
 import groovy.transform.CompileStatic
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
-import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import net.ijus.nidi.instantiation.InstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,14 +15,16 @@ import org.slf4j.LoggerFactory
 public class ContextBindingReference implements Binding {
 	static final Logger log = LoggerFactory.getLogger(ContextBindingReference)
 
-	Class boundClass
+	Class referencedClass
 	Context ctx
-
+	Class provides
 	Binding resolvedBinding
 
-	ContextBindingReference(Class clazz, Context ctx) {
-		this.boundClass = clazz
+	ContextBindingReference(Class refClass, Context ctx, Class provides = null) {
+		this.referencedClass = refClass
 		this.ctx = ctx
+		this.provides = provides?: refClass
+
 	}
 
 	@Override
@@ -38,7 +39,7 @@ public class ContextBindingReference implements Binding {
 
 	@Override
 	Class getBoundClass() {
-		boundClass
+		provides
 	}
 
 	@Override
@@ -53,9 +54,9 @@ public class ContextBindingReference implements Binding {
 
 	@Override
 	void validate() {
-		Binding b = ctx.getBindingForClass(boundClass)
+		Binding b = ctx.getBindingForClass(referencedClass)
 		if (!b) {
-			throw new InvalidConfigurationException("The Context does not contain a binding for ${boundClass.getCanonicalName()} but it definitely should")
+			throw new InvalidConfigurationException("The Context does not contain a binding for ${referencedClass.getCanonicalName()} but it definitely should")
 		}
 		b.validate()
 	}
@@ -68,15 +69,15 @@ public class ContextBindingReference implements Binding {
 	}
 
 	Binding createResolvedBinding(){
-		Binding b = ctx.getBindingForClass(this.boundClass)
+		Binding b = ctx.getBindingForClass(this.referencedClass)
 		if (!b) {
-			throw new InvalidConfigurationException("The Context does not contain a Binding for class: ${boundClass.name}. Perhaps the referenced Binding trying to be created to early")
+			throw new InvalidConfigurationException("The Context does not contain a Binding for class: ${referencedClass.name}. Perhaps the referenced Binding trying to be created to early")
 		}
 		Scope s = b.getScope()
-		log.debug("Resolving binding for class: ${this.boundClass.name} with scope: ${s}")
+		log.debug("Resolving binding for class: ${this.referencedClass.name} with scope: ${s}")
 
 		if (s == Scope.ONE_PER_BINDING) {
-			b = new CacheingBinding(b.getInstanceGenerator(), this.boundClass, b.getImplClass(), Scope.ONE_PER_BINDING)
+			b = new CacheingBinding(b.getInstanceGenerator(), this.referencedClass, b.getImplClass(), Scope.ONE_PER_BINDING)
 		}
 		return b
 	}
