@@ -20,6 +20,20 @@ import spock.lang.Specification
 
 public class ContextBuilderSpec extends Specification {
 
+	void "ContextBuilder should throw InvalidConfigurationException when attempting to inherit from an invalid class"(){
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.inheritFrom(current)
+
+		then:
+		thrown(InvalidConfigurationException)
+
+		where:
+		current << ['non.existant.class.MyClass', BasicCCProcessor]
+	}
+
 	void "ContextBuilder should set the default scope on bindings with unspecified scopes"() {
 		setup:
 		ContextBuilder builder = new ContextBuilder()

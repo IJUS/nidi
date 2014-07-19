@@ -1,6 +1,7 @@
 package net.ijus.nidi
 
 import com.example.config.ComplexConfigScript
+import com.example.config.ExampleConfigScript
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
 import com.example.impl.FraudDetectorImpl
@@ -26,6 +27,21 @@ public class ConfigurationSpec extends Specification {
 
 	def cleanup(){
 		ContextTestUtils.clearContextHolder()
+	}
+
+	void "configurations should inherit from one another"() {
+		when:
+		Context ctx = configureNew{
+			inheritFrom(ExampleConfigScript.getName())
+			bind(CreditCardProcessor).to(BasicCCProcessor)
+		}
+
+		then:
+		def ccProc = ctx.getInstance(CreditCardProcessor)
+		ccProc instanceof BasicCCProcessor
+
+		def logger = ctx.getInstance(LoggingService)
+		logger instanceof LoggingServiceImpl
 	}
 
 	void "configurations with references should be handled correctly"(){
