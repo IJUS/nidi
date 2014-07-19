@@ -64,6 +64,13 @@ public class ContextBuilder {
 		doInheritance(parentBuilder)
 	}
 
+	void inheritFrom(Closure config){
+		ContextBuilder parentBuilder = new ContextBuilder()
+		config.setDelegate(parentBuilder)
+		config.call(parentBuilder)
+		doInheritance(parentBuilder)
+	}
+
 	private void doInheritance(ContextBuilder parentBuilder) {
 		Map parentBindings = parentBuilder.ctxBindings
 		log.debug("Inheriting from ContextBuilder with class: ${parentBuilder.getClass().getName()} containing ${parentBindings.size()} bindings")

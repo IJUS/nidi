@@ -7,7 +7,9 @@ import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
+import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.BindingBuilder
@@ -19,6 +21,37 @@ import spock.lang.Specification
  */
 
 public class ContextBuilderSpec extends Specification {
+
+	void "inheriting from a parent should not override the default scope if it has been specified"(){
+		setup:
+		def parentConfig = {
+			defaultScope = Scope.SINGLETON
+		}
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.with{
+			defaultScope = Scope.ONE_PER_BINDING
+			inheritFrom(parentConfig)
+		}
+
+		then:
+		builder.defaultScope == Scope.ONE_PER_BINDING
+	}
+
+	void "inheriting from a parent should set the default scope if it has not been specified"(){
+		setup:
+		def parentConfig = {
+			defaultScope = Scope.SINGLETON
+		}
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.inheritFrom(parentConfig)
+
+		then:
+		builder.defaultScope == Scope.SINGLETON
+	}
 
 	void "ContextBuilder should throw InvalidConfigurationException when attempting to inherit from an invalid class"(){
 		setup:
