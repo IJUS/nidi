@@ -1,9 +1,13 @@
 package net.ijus.nidi
 
+import com.example.config.ComplexConfigScript
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
+import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
+import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
 import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.bindings.BasicBinding
@@ -22,6 +26,28 @@ public class ConfigurationSpec extends Specification {
 
 	def cleanup(){
 		ContextTestUtils.clearContextHolder()
+	}
+
+	void "configurations with references should be handled correctly"(){
+		when:
+		Context ctx = configureNew(ComplexConfigScript)
+
+		then:
+		def logger = ctx.getInstance(LoggingService)
+		logger instanceof NamespacedLoggingService
+		logger.stringProperty == 'custom namespace'
+
+		def fraudDet = ctx.getInstance(FraudDetectionService)
+		fraudDet instanceof FraudDetectorImpl
+		fraudDet.whoYaGonnCall == "Not the Ghostbusters!"
+
+		def ccProc = ctx.getInstance(CreditCardProcessor)
+		ccProc instanceof ComplexCCProcessor
+
+		def refProc = ctx.getInstance(RefundProcessor)
+		refProc.is(ccProc)
+
+
 	}
 
 	void "Binding references should provide the same implementation and scope as the referenced binding"(){

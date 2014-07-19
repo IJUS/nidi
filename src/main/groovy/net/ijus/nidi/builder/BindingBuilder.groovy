@@ -136,6 +136,25 @@ class BindingBuilder {
 		return this
 	}
 
+	/**
+	 * Used when a single concrete implementation is to be used for two separate interfaces.
+	 * Say we have two Interfaces, ChargeProcessor and Refund Processor, and one Concrete class, ComplexCCProcessor
+	 * that implements both. If we want NiDI to use a single instance of our ComplexCCProcessor for both roles, then
+	 * we would create a normal binding for one, and reference that for the other.
+	 * <code>
+	 *     //in context config
+	 *     bind(ChargeProcessor).to(ComplexCCProcessor).withScope(Scope.SINGLETON)
+	 *
+	 *     //this way you will be guaranteed to always have only a single instance of ComplexCCProcessor that will get used for both roles
+	 *     bind(RefundProcessor).reference(ChargeProcessor)
+	 *
+	 *     //this way you would end up with with two instances of ComplexCCProcessor, one for each binding
+	 *     bind(RefundProcessor).to(ComplexCCProcessor)
+	 * </code>
+	 * Calling reference will effectively finalize the binding builder. You cannot modify it further.
+	 *
+	 * @param otherBaseClass The base class to reference the binding for.
+	 */
 	void reference(Class otherBaseClass) {
 		checkFinalization()
 		if (this.impl || this.instanceGenerator) {
@@ -202,7 +221,7 @@ class BindingBuilder {
 		}
 
 		if (!paramClass) {
-			throw new InvalidConfigurationException("Could not find a matching constructor parameter: ${param}. In order to use bindConstructorParam(${param}), the constructor parameter must be annotated with: @Bound('${param}')")
+			throw new InvalidConfigurationException("Could not find a matching constructor parameter: ${param}. In order to use bindConstructorParam(${param}), the constructor parameter must be annotated with: @RequiredBinding('${param}')")
 		}
 
 		BindingBuilder bb = new BindingBuilder(paramClass, this.ctxBuilder)
@@ -241,7 +260,7 @@ class BindingBuilder {
 			Annotation[] paramAnnotations = allAnnotations[outer]
 			for (int inner = 0; inner < paramAnnotations.length; inner++) {
 				Annotation a = paramAnnotations[inner]
-				if (a instanceof Bound) {
+				if (a instanceof RequiredBinding) {
 					boundParams[outer] = a.value()
 				}
 			}

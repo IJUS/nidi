@@ -8,7 +8,7 @@ import java.lang.annotation.*
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Bound {
+public @interface RequiredBinding {
 	String value()
 
 }

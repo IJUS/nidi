@@ -3,6 +3,7 @@ package com.example.impl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
+import com.example.interfaces.RefundProcessor
 import com.example.misc.Transaction;
 import groovy.transform.CompileStatic
 
@@ -11,7 +12,7 @@ import groovy.transform.CompileStatic
  */
 
 @CompileStatic
-public class ComplexCCProcessor implements CreditCardProcessor {
+public class ComplexCCProcessor implements CreditCardProcessor, RefundProcessor {
 	FraudDetectionService fraudDetectionService
 	LoggingService loggingService
 
@@ -27,6 +28,11 @@ public class ComplexCCProcessor implements CreditCardProcessor {
 
 	@Override
 	boolean process(Transaction transaction) {
+		return false
+	}
+
+	@Override
+	boolean processRefund(Transaction transaction) {
 		return false
 	}
 }
