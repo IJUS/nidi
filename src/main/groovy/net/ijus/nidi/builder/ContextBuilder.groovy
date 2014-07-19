@@ -22,19 +22,42 @@ public class ContextBuilder {
 	Scope defaultScope = Scope.ALWAYS_CREATE_NEW
 	Map<Class, BindingBuilder> ctxBindings = [:]
 
-	Context ctx = new Context()
+	protected Context ctx = new Context()
 
+	/**
+	 * alias for newBinding()
+	 * @param clazz
+	 * @return
+	 */
 	BindingBuilder bind(Class clazz){
+		return newBinding(clazz)
+	}
+
+	/**
+	 * Creates a new BindingBuilder for this class, with this ContextBuilder as it's parent.
+	 * @param clazz the base class for this binding, typically an Interface or Abstract Class
+	 * @return a new BindingBuilder, ready to be configured.
+	 */
+	BindingBuilder newBinding(Class clazz){
 		BindingBuilder bb = new BindingBuilder(clazz, this)
 		ctxBindings.put(clazz, bb)
 		bb
 	}
 
+	/**
+	 * Sets the default scope for this contextBuilder. All bindings will inherit this scope, unless one is
+	 * explicitly set on it.
+	 * @param newScope
+	 */
 	void setDefaultScope(Scope newScope) {
 		this.defaultScope = newScope
 		this.defaultScopeChanged = true
 	}
 
+	/**
+	 * {@see #inheritFrom(ContextConfig)}
+	 * @param fqcn fully-qualified class name of the ContextConfig class
+	 */
 	void inheritFrom(String fqcn){
 		Class configClass
 		try {
@@ -45,6 +68,10 @@ public class ContextBuilder {
 		inheritFrom(configClass)
 	}
 
+	/**
+	 * {@see #inheritFrom(ContextConfig)}
+	 * @param configClass a class that implements ContextConfig, which will be created by simply calling newInstance() on it
+	 */
 	void inheritFrom(Class configClass) {
 		if (!ContextConfig.isAssignableFrom(configClass)) {
 			throw new InvalidConfigurationException("Tried to inherit from: ${configClass.name}, but that class does not immplement ContextConfig")
@@ -58,12 +85,21 @@ public class ContextBuilder {
 		inheritFrom(config)
 	}
 
+	/**
+	 * Inherits from another ContextConfig. Allows for having a default ContextConfig and allows other Contexts to inherit
+	 * from it and override only the functionality they need to.
+	 * @param config
+	 */
 	void inheritFrom(ContextConfig config) {
 		ContextBuilder parentBuilder = new ContextBuilder()
 		config.configure(parentBuilder)
 		doInheritance(parentBuilder)
 	}
 
+	/**
+	 * {@see #inheritFrom(ContextConfig)}
+	 * @param config closure that configures a contextBuilder
+	 */
 	void inheritFrom(Closure config){
 		ContextBuilder parentBuilder = new ContextBuilder()
 		config.setDelegate(parentBuilder)
@@ -71,6 +107,13 @@ public class ContextBuilder {
 		doInheritance(parentBuilder)
 	}
 
+	/**
+	 * Consumes the parent context builder and adds it's bindings to this builder. Always preserves the bindings from this
+	 * builder if there is a conflict.
+	 * Don't call this method directly, and the parentBuilder is expected to be a throw-away created only for the purpose
+	 * of inheriting it's bindings.
+	 * @param parentBuilder
+	 */
 	private void doInheritance(ContextBuilder parentBuilder) {
 		Map parentBindings = parentBuilder.ctxBindings
 		log.debug("Inheriting from ContextBuilder with class: ${parentBuilder.getClass().getName()} containing ${parentBindings.size()} bindings")
