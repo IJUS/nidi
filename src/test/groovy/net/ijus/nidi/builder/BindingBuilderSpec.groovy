@@ -76,6 +76,14 @@ public class BindingBuilderSpec extends Specification {
 
 		then:
 		thrown(InvalidConfigurationException)
+
+		when: "set the impl to an abstract class"
+		BindingBuilder b4 = new BindingBuilder(LoggingService, null)
+		b4.@impl = LoggingService
+		b4.validateClassAssignment()
+
+		then:
+		thrown(InvalidConfigurationException)
 	}
 
 	void "constructor params with the @Bound annotation should be correctly identified"(){

@@ -2,6 +2,7 @@ package net.ijus.nidi.builder
 
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.ConcreteClassNoInterface
 import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
@@ -16,11 +17,48 @@ import net.ijus.nidi.builder.BindingBuilder
 import net.ijus.nidi.builder.ContextBuilder
 import spock.lang.Specification
 
+import java.awt.event.MouseAdapter
+
 /**
  * Created by pfried on 7/6/14.
  */
 
 public class ContextBuilderSpec extends Specification {
+
+	void "calling register with a class should create a binding from that class to itself"(){
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.bind(LoggingService).to(LoggingServiceImpl)
+		builder.register(ConcreteClassNoInterface).setupInstance {
+			it.stringProperty = "custom value"
+		}
+		Context ctx = builder.build()
+
+		then:
+		def impl = ctx.getInstance(ConcreteClassNoInterface)
+		impl instanceof ConcreteClassNoInterface
+		impl.stringProperty == "custom value"
+
+	}
+
+	void "calling register and passing in an abstract class should throw an exception"(){
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+
+		when: "register an interface"
+		builder.register(Map)
+
+		then:
+		thrown(InvalidConfigurationException)
+
+		when: "register an abstract class"
+		builder.register(MouseAdapter)
+
+		then:
+		thrown(InvalidConfigurationException)
+	}
 
 	void "inheriting from a parent should not override the default scope if it has been specified"(){
 		setup:

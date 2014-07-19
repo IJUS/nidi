@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 
 import java.lang.annotation.Annotation
 import java.lang.reflect.Constructor
+import java.lang.reflect.Modifier
 
 /**
  * Created by pfried on 7/2/14.
@@ -365,6 +366,8 @@ class BindingBuilder {
 		} else if (impl && !baseClass.isAssignableFrom(impl)) {
 			throw new InvalidConfigurationException("The Class: ${name(baseClass)} was bound to ${name(impl)} but it is not a ${baseClass.getSimpleName()}")
 
+		} else if (impl && Modifier.isAbstract(impl.getModifiers())) {
+			throw new InvalidConfigurationException("The Class ${name(baseClass)} was bound to the abstract class: ${name(impl)}. The implementation MUST be a concrete class")
 		}
 
 	}

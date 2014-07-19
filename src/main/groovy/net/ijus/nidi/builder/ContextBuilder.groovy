@@ -9,6 +9,8 @@ import net.ijus.nidi.bindings.Scope
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.lang.reflect.Modifier
+
 /**
  * Created by pfried on 7/2/14.
  */
@@ -20,7 +22,7 @@ public class ContextBuilder {
 	boolean defaultScopeChanged = false
 
 	Scope defaultScope = Scope.ALWAYS_CREATE_NEW
-	Map<Class, BindingBuilder> ctxBindings = [:]
+	Map<Object, BindingBuilder> ctxBindings = [:]
 
 	protected Context ctx = new Context()
 
@@ -42,6 +44,22 @@ public class ContextBuilder {
 		BindingBuilder bb = new BindingBuilder(clazz, this)
 		ctxBindings.put(clazz, bb)
 		bb
+	}
+
+	/**
+	 * Binds a Class to itself. This is useful for letting the context handle instantiation of concrete classes with
+	 * dependencies on other classes in the context
+	 * @param clazz concrete class to bind to itself
+	 * @return
+	 * @throws InvalidConfigurationException if the class passed in is an interface or abstract class
+	 */
+	BindingBuilder register(Class clazz) throws InvalidConfigurationException {
+		if (Modifier.isAbstract(clazz.getModifiers())) {
+			throw new InvalidConfigurationException("Attemted to register the abstract class: ${clazz.name}. Only Concrete classes can be registered in this way.")
+		}
+		BindingBuilder bb = newBinding(clazz)
+		bb.to(clazz)
+		return bb
 	}
 
 	/**
