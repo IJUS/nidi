@@ -5,6 +5,7 @@ import com.example.general.MultipleAnnotatedConstructors
 import com.example.general.UnannotatedConstructors
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
 import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
@@ -24,6 +25,51 @@ import java.lang.reflect.Constructor
 
 
 public class BindingBuilderSpec extends Specification {
+
+	void "binding builders should be able to specify inner bindings to be used for constructor params"(){
+		setup:
+		ContextBuilder ctxBuilder = GroovyMock()
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
+
+		when:
+		builder.to(ComplexCCProcessor){
+			scope = Scope.ALWAYS_CREATE_NEW
+			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
+			bindConstructorParam(FraudDetectionService).to(FraudDetectorImpl)
+		}
+		Binding result = builder.build()
+
+		then:
+		def instance = result.getInstance()
+		instance instanceof ComplexCCProcessor
+
+
+	}
+
+	void "binding builder should throw an exception when attempting to create an inner binding for a parameter that doesn't exist"(){
+		setup:
+		ContextBuilder ctxBuilder = GroovyMock()
+
+		when:
+		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
+		builder.to(BasicCCProcessor){
+			scope = Scope.ALWAYS_CREATE_NEW
+			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
+		}
+
+		then:
+		thrown(InvalidConfigurationException)
+
+		when:
+		BindingBuilder b2 = new BindingBuilder(CreditCardProcessor, ctxBuilder)
+		b2.to(BasicCCProcessor){
+			scope = Scope.ALWAYS_CREATE_NEW
+			bindConstructorParam("nonExistantProp").toValue {"stringy"}
+		}
+
+		then:
+		thrown(InvalidConfigurationException)
+	}
 
 	void "binding to a reference to another binding should result in a context reference binding"(){
 		setup:

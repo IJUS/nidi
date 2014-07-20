@@ -212,6 +212,10 @@ class BindingBuilder {
 		if (!this.impl) {
 			throw new InvalidConfigurationException("Cannot create bindings for constructor params before the implementation class has been specified")
 		}
+		/*
+		 * Since this method is binding to a named property, we'll have to resolve what that is immediately, since
+		 * we have no other way of knowing the class
+		 */
 		Constructor constructor = resolveConstructor(this.impl)
 		String[] paramAnnots = getBoundAnnotatedParams(constructor)
 		Class paramClass
@@ -226,12 +230,46 @@ class BindingBuilder {
 		}
 
 		BindingBuilder bb = new BindingBuilder(paramClass, this.ctxBuilder)
+		bb.scope = this.scope
 		this.innerBindings.put(param, bb)
 		return bb
 	}
 
+	/**
+	 * Creates a binding just for this constructor parameter. The constructor must only have one parameter of the given type.
+	 * If the constructor has 2 or more parameters of one type, then the named property style of binding should be used, and
+	 * the parameters themselves should be annotated with @RequiredBinding("<property-name>")
+	 *
+	 * @param paramType the class of the constructor parameter
+	 * @return
+	 */
+	BindingBuilder bindConstructorParam(Class paramType){
+		checkFinalization()
+		if (!impl) {
+			throw new InvalidConfigurationException("Cannot call bindConstructorParam() yet because the implementation class has not been set")
+		}
+		Constructor constructor = resolveConstructor(this.impl)
+		Class[] types = constructor.getParameterTypes()
 
-	////////////////// plumbing /////////////////////////
+		//check to make sure the parameters have exactly one occurrence of the specified class
+		if (!types.contains(paramType)) {
+			throw new InvalidConfigurationException("called bindConstructorParam() with an invalid Class argument. The class: ${name(paramType)} is not a parameter in the resolved constructor for: ${name(impl)}")
+
+		} else if (types.count { it == paramType } > 1) {
+			throw new InvalidConfigurationException("The Constructor for ${name(impl)} takes multiple parameters of type: ${name(paramType)}. Cannot use Class to identify params, must use @RequiredBinding('<name>') instead")
+		}
+
+		// ok, now that that's out of the way, we can just return a new bindingBuilder
+		BindingBuilder bb = new BindingBuilder(paramType, this.ctxBuilder)
+		bb.scope = this.scope
+		this.innerBindings.put(paramType, bb)
+		return bb
+
+	}
+
+	////////////////// porcelain (above) /////////////////////
+
+	////////////////// plumbing (below) //////////////////////
 
 	/**
 	 * Sets the specified scope only if the current scope is null
@@ -242,6 +280,8 @@ class BindingBuilder {
 			this.scope = s
 		}
 	}
+
+	/// stuff for resolving constructor params (below)
 
 	/**
 	 * returns an array of string values for all the constructor params annotated with @Bound
@@ -294,47 +334,71 @@ class BindingBuilder {
 			Class paramType = constructorParams[paramIdx]
 
 			if (boundAnnotationValues[paramIdx]) {
+				//This Constructor parameter has a @RequiredBinding annotation
 				String paramName = boundAnnotationValues[paramIdx]
 
 				paramBindings[paramIdx] = buildPropertyBinding(paramName)
 
-			} else {
+			} else if (innerBindings.containsKey(paramType)) {
+				//Binding for this constructor param has been overridden
+				paramBindings[paramIdx] = buildNormalInnerBinding(paramType)
+
+			} else if (ctxBuilder.containsBindingFor(paramType)) {
+				//This constructor param is not annotated and is not overridden in the innerBindings
+				//This means we have to look in the context for the correct binding
 				paramBindings[paramIdx] = buildContextRefBinding(paramType)
 
+			} else {
+				//Oh no!
+				throw new InvalidConfigurationException("The Constructor for ${name(impl)} requires a parameter of type: ${name(paramType)}, but no Binding for this class could be found")
 			}
 
 		}
 		return paramBindings
 	}
 
-	BindingBuilder getBindingBuilder(key) {
-		BindingBuilder bindingBuilder
-		if (innerBindings.containsKey(key)) {
-			bindingBuilder = innerBindings.get(key)
-		} else if (ctxBuilder.containsBindingFor(key)) {
-			bindingBuilder = ctxBuilder.ctxBindings.get(key)
-		} else {
-			String name = (key instanceof Class)? key.getName() : key.toString()
-			throw new InvalidConfigurationException("BindingBuilder requires the binding: ${name} but it could not be found")
+	/**
+	 * Builds an inner binding for the specified class.
+	 * When the constructor for the impl class is to use bindings that have been overridden for this class.
+	 * @param clazz
+	 * @return
+	 */
+	protected Binding buildNormalInnerBinding(Class clazz) {
+		BindingBuilder bb = this.innerBindings.get(clazz)
+		if (!bb) {
+			throw new InvalidConfigurationException("Expected to find an inner binding for ${name(clazz)}, but none was found")
 		}
-		return bindingBuilder
+		innerBindings.remove(clazz)
+		return bb.build()
 	}
 
-	protected Binding buildPropertyBinding(key){
+	protected Binding buildPropertyBinding(String key){
 
-		BindingBuilder propertyBuilder = getBindingBuilder(key)
-
-		String paramName = key.toString()
-		log.debug("Constructor Param: ${paramName} for ${name(impl)} being resolved from an inner binding. Exists?= ${propertyBuilder != null}")
-		if (!propertyBuilder) {
-			throw new InvalidConfigurationException("The constructor param: ${paramName} for class: ${name(impl)} could not be resolved. Expected to find an inner Binding, but none was found")
+		BindingBuilder propertyBuilder
+		if (innerBindings.containsKey(key)) {
+			log.debug("Resolving Property binding for ${key} using an inner binding")
+			propertyBuilder = innerBindings.get(key)
+		} else if (ctxBuilder.containsBindingFor(key)) {
+			log.debug("resolving property binding for ${key} using a binding found in the context")
+			propertyBuilder = ctxBuilder.ctxBindings.get(key)
 		}
+
+		if (!propertyBuilder) {
+			throw new InvalidConfigurationException("The constructor param: ${key} for class: ${name(impl)} could not be resolved. Expected to find an inner Binding, but none was found")
+		}
+
 		Binding resolvedBinding = propertyBuilder.build()
 		log.debug("Built inner binding")
 		this.innerBindings.remove(key)
 		return resolvedBinding
 	}
 
+	/**
+	 * Builds a binding for a constructor param that references a binding in the constructor.
+	 * @param refClass
+	 * @param provides
+	 * @return
+	 */
 	protected Binding buildContextRefBinding(Class refClass, Class provides = null) {
 		log.trace("buildContextRefBinding: baseType=${name(refClass)}")
 		if (!ctxBuilder.containsBindingFor(refClass)) {
@@ -346,8 +410,14 @@ class BindingBuilder {
 		return b
 	}
 
+	/// end stuff for resolving constructor params
 
 
+	/**
+	 * For a Normal binding, figures out which constructor to use for the given class
+	 * @param clazz
+	 * @return
+	 */
 	protected Constructor resolveConstructor(Class clazz) {
 		Constructor[] constructors = clazz.getConstructors()
 		def constructor
@@ -376,6 +446,9 @@ class BindingBuilder {
 		name
 	}
 
+	/**
+	 * makes sure nobody tried to bind to an incompatible class
+	 */
 	void validateClassAssignment() {
 		if (!impl && !bindingReferenceClass) {
 			throw new InvalidConfigurationException("The Class: ${name(baseClass)} was declared to be bound but the implementation class is null")
@@ -413,7 +486,10 @@ class BindingBuilder {
 		return b
 	}
 
-
+	/**
+	 * If the target of this BindingBuilder is determined to be a class, then this is what will build the binding for it
+	 * @return
+	 */
 	protected Binding buildNormalBinding(){
 		/*
 		The instance generator could already be set by a call to `toValue(Closure)`. If so, then we'll want to keep it.
