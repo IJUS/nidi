@@ -230,6 +230,9 @@ class BindingBuilder {
 		return bb
 	}
 
+
+	////////////////// plumbing /////////////////////////
+
 	/**
 	 * Sets the specified scope only if the current scope is null
 	 * @param s
@@ -293,7 +296,7 @@ class BindingBuilder {
 			if (boundAnnotationValues[paramIdx]) {
 				String paramName = boundAnnotationValues[paramIdx]
 
-				paramBindings[paramIdx] = buildInnerBinding(paramName)
+				paramBindings[paramIdx] = buildPropertyBinding(paramName)
 
 			} else {
 				paramBindings[paramIdx] = buildContextRefBinding(paramType)
@@ -304,15 +307,29 @@ class BindingBuilder {
 		return paramBindings
 	}
 
-	protected Binding buildInnerBinding(key){
+	BindingBuilder getBindingBuilder(key) {
+		BindingBuilder bindingBuilder
+		if (innerBindings.containsKey(key)) {
+			bindingBuilder = innerBindings.get(key)
+		} else if (ctxBuilder.containsBindingFor(key)) {
+			bindingBuilder = ctxBuilder.ctxBindings.get(key)
+		} else {
+			String name = (key instanceof Class)? key.getName() : key.toString()
+			throw new InvalidConfigurationException("BindingBuilder requires the binding: ${name} but it could not be found")
+		}
+		return bindingBuilder
+	}
 
-		BindingBuilder innerBuilder = this.innerBindings.get(key)
+	protected Binding buildPropertyBinding(key){
+
+		BindingBuilder propertyBuilder = getBindingBuilder(key)
+
 		String paramName = key.toString()
-		log.debug("Constructor Param: ${paramName} for ${name(impl)} being resolved from an inner binding. Exists?= ${innerBuilder != null}")
-		if (!innerBuilder) {
+		log.debug("Constructor Param: ${paramName} for ${name(impl)} being resolved from an inner binding. Exists?= ${propertyBuilder != null}")
+		if (!propertyBuilder) {
 			throw new InvalidConfigurationException("The constructor param: ${paramName} for class: ${name(impl)} could not be resolved. Expected to find an inner Binding, but none was found")
 		}
-		Binding resolvedBinding = innerBuilder.build()
+		Binding resolvedBinding = propertyBuilder.build()
 		log.debug("Built inner binding")
 		this.innerBindings.remove(key)
 		return resolvedBinding

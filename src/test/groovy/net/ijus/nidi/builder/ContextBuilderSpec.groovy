@@ -5,6 +5,7 @@ import com.example.impl.ComplexCCProcessor
 import com.example.impl.ConcreteClassNoInterface
 import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
+import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
@@ -20,6 +21,23 @@ import java.awt.event.MouseAdapter
  */
 
 public class ContextBuilderSpec extends Specification {
+
+	void "bound Properties declared in the context should found and used in instance generation"() {
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.with{
+			bindProperty('stringProperty', "customString")
+			bind(LoggingService).to(NamespacedLoggingService)
+		}
+		def ctx = builder.build()
+
+		then:
+		def instance = ctx.getInstance(LoggingService)
+		instance instanceof NamespacedLoggingService
+		instance.stringProperty == 'customString'
+	}
 
 	void "properties should be bound to string keys"(){
 		setup:

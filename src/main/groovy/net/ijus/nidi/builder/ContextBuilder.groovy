@@ -171,8 +171,8 @@ public class ContextBuilder {
 		}
 	}
 
-	boolean containsBindingFor(Class clazz) {
-		return ctxBindings.containsKey(clazz)
+	boolean containsBindingFor(key) {
+		return ctxBindings.containsKey(key)
 	}
 
 	Context getContextRef(){
