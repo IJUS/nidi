@@ -1,6 +1,7 @@
 package com.example.config
 
 import com.example.impl.ComplexCCProcessor
+import com.example.impl.ComplexFraudDetector
 import com.example.impl.FraudDetectorImpl
 import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
@@ -23,17 +24,21 @@ public class ComplexConfigScript implements ContextConfig{
 	void configure(ContextBuilder builder) {
 		builder.with{
 			defaultScope = Scope.ALWAYS_CREATE_NEW
+
 			bind(CreditCardProcessor).to(ComplexCCProcessor).withScope(Scope.SINGLETON)
 			bind(RefundProcessor).reference(CreditCardProcessor)
+
 			bind(LoggingService).to(NamespacedLoggingService){
-				scope = Scope.ONE_PER_BINDING
+				scope = Scope.ONE_PER_BINDING //CCProc/RefProc should always get one instance, and FraudDet should get a different one
 				bindConstructorParam('stringProperty').toValue { 'custom namespace' }
 			}
-			bind(FraudDetectionService).to(FraudDetectorImpl).setupInstance {
-				it.whoYaGonnCall = "Not the Ghostbusters!"
+
+			bind(FraudDetectionService).to(ComplexFraudDetector){
+				bindConstructorParam('fraudDetURL').toValue { 'www.test.com' }
+				setupInstance {
+					it.whoYaGonnCall = "Ghostbusters"
+				}
 			}
-
-
 
 		}
 

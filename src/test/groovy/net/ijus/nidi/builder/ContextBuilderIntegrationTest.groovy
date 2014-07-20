@@ -1,5 +1,6 @@
 package net.ijus.nidi.builder
 
+import com.example.config.ComplexConfigScript
 import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
 import com.example.impl.ConcreteClassNoInterface
@@ -9,6 +10,7 @@ import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
+import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
@@ -20,6 +22,28 @@ import spock.lang.Specification
  */
 
 public class ContextBuilderIntegrationTest extends Specification {
+
+	void "test building a complex nested context"(){
+		when:
+		Context ctx = Configuration.configureNew(ComplexConfigScript)
+
+		then:
+		def ccProc = ctx.getInstance(CreditCardProcessor)
+		ccProc instanceof ComplexCCProcessor
+
+		def refProc = ctx.getInstance(RefundProcessor)
+		refProc.is(ccProc)
+
+		def ccProc2 = ctx.getInstance(CreditCardProcessor)
+		ccProc2.is(ccProc)
+
+		ccProc.loggingService instanceof NamespacedLoggingService
+		ccProc.loggingService.stringProperty == 'custom namespace'
+
+		def fraudDet = ccProc.fraudDetectionService
+		fraudDet.loggingService instanceof NamespacedLoggingService
+		!fraudDet.loggingService.is(ccProc.loggingService) //they are separate instances because of the ONE_PER_BINDING scope
+	}
 
 	void "bound Properties declared in the context should found and used in instance generation"() {
 		setup:
