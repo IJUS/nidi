@@ -46,17 +46,9 @@ public class ConfigurationSpec extends Specification {
 
 	void "configurations with references should be handled correctly"(){
 		when:
-		Context ctx = configureNew(ComplexConfigScript)
+		Context ctx = configureNew(ExampleConfigScript)
 
 		then:
-		def logger = ctx.getInstance(LoggingService)
-		logger instanceof NamespacedLoggingService
-		logger.stringProperty == 'custom namespace'
-
-		def fraudDet = ctx.getInstance(FraudDetectionService)
-		fraudDet instanceof FraudDetectorImpl
-		fraudDet.whoYaGonnCall == "Not the Ghostbusters!"
-
 		def ccProc = ctx.getInstance(CreditCardProcessor)
 		ccProc instanceof ComplexCCProcessor
 
@@ -92,7 +84,7 @@ public class ConfigurationSpec extends Specification {
 
 		then:
 		notThrown(InvalidConfigurationException)
-		ctx.bindingsMap.size() == 3
+		ctx.bindingsMap.size() == 4
 
 		cleanup:
 		System.clearProperty(CONFIG_PROPERTY_NAME)
@@ -106,7 +98,7 @@ public class ConfigurationSpec extends Specification {
 		configure(builder, "com.example.config.ExampleConfigScript")
 
 		then:
-		builder.ctxBindings.size() == 3
+		builder.ctxBindings.size() == 4
 		builder.ctxBindings.get(CreditCardProcessor).impl == ComplexCCProcessor
 		builder.ctxBindings.get(LoggingService).impl == LoggingServiceImpl
 
