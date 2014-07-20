@@ -54,7 +54,7 @@ public class ContextBindingReference implements Binding {
 
 	@Override
 	void validate() {
-		Binding b = ctx.getBindingForClass(referencedClass)
+		Binding b = ctx.getBinding(referencedClass)
 		if (!b) {
 			throw new InvalidConfigurationException("The Context does not contain a binding for ${referencedClass.getCanonicalName()} but it definitely should")
 		}
@@ -69,7 +69,7 @@ public class ContextBindingReference implements Binding {
 	}
 
 	Binding createResolvedBinding(){
-		Binding b = ctx.getBindingForClass(this.referencedClass)
+		Binding b = ctx.getBinding(this.referencedClass)
 		if (!b) {
 			throw new InvalidConfigurationException("The Context does not contain a Binding for class: ${referencedClass.name}. Perhaps the referenced Binding trying to be created to early")
 		}

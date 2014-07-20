@@ -1,6 +1,7 @@
 package net.ijus.nidi;
 
 import groovy.transform.CompileStatic
+import net.ijus.nidi.bindings.Binding
 
 /**
  * Created by pfried on 6/16/14.
@@ -9,21 +10,28 @@ import groovy.transform.CompileStatic
 @CompileStatic
 public class Context {
 
-	Map<Class, net.ijus.nidi.bindings.Binding> bindingsMap = [:]
+	Map<Object, Binding> bindingsMap = [:]
 
 
-	net.ijus.nidi.bindings.Binding getBindingForClass(Class clazz) {
-		return bindingsMap.get(clazz)
+	Binding getBinding(Object key) {
+		return bindingsMap.get(key)
 	}
 
-	boolean containsBinding(Class clazz) {
-		return bindingsMap.containsKey(clazz)
+	boolean containsBinding(Object key) {
+		return bindingsMap.containsKey(key)
 	}
 
 	def getInstance(Class clazz) {
 		if (!containsBinding(clazz)) {
 			throw new InvalidConfigurationException("The Class: ${clazz.getCanonicalName()} was requested from a Context, but no Binding exists for it")
 		}
-		return getBindingForClass(clazz).getInstance()
+		return getBinding(clazz).getInstance()
+	}
+
+	def getInstance(String key) {
+		if (!containsBinding(key)) {
+			throw new InvalidConfigurationException("The Property: ${key} was requested from a Context but no Binding exists for it")
+		}
+		return getBinding(key).getInstance()
 	}
 }

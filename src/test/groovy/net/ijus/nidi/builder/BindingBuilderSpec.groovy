@@ -14,8 +14,6 @@ import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.*
-import net.ijus.nidi.builder.BindingBuilder
-import net.ijus.nidi.builder.ContextBuilder;
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
@@ -34,7 +32,7 @@ public class BindingBuilderSpec extends Specification {
 		refBinding.getBoundClass() >> CreditCardProcessor
 		refBinding.getImplClass() >> BasicCCProcessor
 		refBinding.getInstance() >> new BasicCCProcessor()
-		ctx.getBindingForClass(CreditCardProcessor) >> refBinding
+		ctx.getBinding(CreditCardProcessor) >> refBinding
 		ContextBuilder ctxBuilder = GroovyMock()
 		ctxBuilder.getContextRef() >> ctx
 		ctxBuilder.containsBindingFor(CreditCardProcessor) >> true

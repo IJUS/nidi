@@ -1,8 +1,8 @@
 package net.ijus.nidi.builder
 
 import groovy.transform.CompileStatic
-import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
+import net.ijus.nidi.bindings.Binding
 import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
@@ -59,6 +59,32 @@ public class ContextBuilder {
 		}
 		BindingBuilder bb = newBinding(clazz)
 		bb.to(clazz)
+		return bb
+	}
+
+	/**
+	 * Sets a property that will be bound to any Constructor parameters annotated with @RequiredBinding('myProperty')
+	 *
+	 * @param propertyName the property name that matches the value of a RequiredBinding
+	 * @param value the value to be bound to
+	 * @return the BindingBuilder, for chaining additional calls
+	 */
+	BindingBuilder bindProperty(String propertyName, Object value){
+		return bindProperty(propertyName){ value }
+	}
+
+	BindingBuilder bindProperty(String propertyName, Closure returnsValue) {
+		Class valueClass
+
+		try {
+			valueClass = returnsValue.call().getClass()
+		} catch (Exception e) {
+			throw new InvalidConfigurationException("Attempted to bind the property: ${propertyName} to the return value of a Closure, but the closure threw: ${e.getClass().getSimpleName()} when it was called", e)
+		}
+
+		BindingBuilder bb = new BindingBuilder(valueClass, this)
+		bb.toValue(returnsValue)
+		this.ctxBindings.put(propertyName, bb)
 		return bb
 	}
 
@@ -155,12 +181,12 @@ public class ContextBuilder {
 
 	Context build() throws InvalidConfigurationException {
 		log.debug("Building Context with ${ctxBindings.size()} Bindings in the root context")
-		ctxBindings.each{Class key, BindingBuilder builder->
+		ctxBindings.each{Object key, BindingBuilder builder->
 			builder.inheritScope(defaultScope)
 			builder.validateClassAssignment()
-			net.ijus.nidi.bindings.Binding binding = builder.build()
+			Binding binding = builder.build()
 			log.debug("Adding Binding: ${binding} to the Context")
-			ctx.bindingsMap.put(binding.getBoundClass(), binding)
+			ctx.bindingsMap.put(key, binding)
 		}
 
 		return ctx

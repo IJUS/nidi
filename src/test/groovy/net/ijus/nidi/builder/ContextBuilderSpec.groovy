@@ -8,13 +8,9 @@ import com.example.impl.LoggingServiceImpl
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
-import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
-import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
-import net.ijus.nidi.builder.BindingBuilder
-import net.ijus.nidi.builder.ContextBuilder
 import spock.lang.Specification
 
 import java.awt.event.MouseAdapter
@@ -24,6 +20,19 @@ import java.awt.event.MouseAdapter
  */
 
 public class ContextBuilderSpec extends Specification {
+
+	void "properties should be bound to string keys"(){
+		setup:
+		ContextBuilder builder = new ContextBuilder()
+
+		when:
+		builder.bindProperty("myProperty", "myValue")
+		def ctx = builder.build()
+
+		then:
+		ctx.getInstance("myProperty") == "myValue"
+
+	}
 
 	void "calling register with a class should create a binding from that class to itself"(){
 		setup:
@@ -147,7 +156,7 @@ public class ContextBuilderSpec extends Specification {
 
 		then:
 		ctx.containsBinding(CreditCardProcessor)
-		net.ijus.nidi.bindings.Binding b = ctx.getBindingForClass(CreditCardProcessor)
+		net.ijus.nidi.bindings.Binding b = ctx.getBinding(CreditCardProcessor)
 		b.boundClass == CreditCardProcessor
 		b.implClass == BasicCCProcessor
 	}
