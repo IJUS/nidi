@@ -2,7 +2,7 @@ NiDI
 =================
 ### Non-invasive Dependency Injection ###
 
-NiDI (needy, get it?) provides a simple solution for dependency injection for Groovy applications. NiDI provides an application Context that takes care of instantiating all of the dependencies for you. Configuration is done entirely in code and is very easy to setup and test, while still maintaining a very high level of flexibility. There is no xml and error messages try to be a helpful as possible.
+NiDI (needy, get it?) provides a simple solution for dependency injection for Groovy applications. NiDI provides an application Context that takes care of instantiating all of the dependencies for you. Configuration is done entirely in code and is very easy to setup and test, while still maintaining a very high level of flexibility. There is no xml and error messages try to be as helpful as possible.
 	
 ## Hello World ##
 
@@ -17,7 +17,61 @@ In this example, we'll setup a simple context in which the interface `SearchServ
 	def searchService = ctx.getInstance(SearchService)
 	assert searchService instanceof BasicFileSystemSearchService
 	
-A Context takes care of instantiating the concrete implementations of all the classed that are bound in it. Typically, an application should have a single main context, which NiDI provides a static place for in the `ContextHolder` class. A simple way to bootstrap your application is to provide an implementation of `net.ijus.nidi.ContextConfig` and tell the Configuration class to set things up from that. 
+A Context takes care of instantiating the concrete implementations of all the classed that are bound in it. Even complex nested dependencies are resolved and instantiated automatically. This has huge benefits for almost any application. It allows dependency resolution to be separated from business logic, or even externalized, and makes it easily testable. 
+
+
+# The Core Principals
+
+1. **Dependencies should be declared in object Constructors**. There's nothing worse than opening up a class only to find a long list of properties and no indication of how they're getting set. If one class depends on another, then it should be declared in it's Constructor. This makes dependencies clearer to the developer, and will tend to highlight poor design instead of hiding it.
+2. **Write code, not XML**. There's no reason to write configuration files in XML when you could use the full power of the Groovy language instead. Configurations can even inherit from one another, allowing a great deal of code reuse.
+3. **Configuration should be testable**. Configuration errors are one of the most common causes of problems there is. Since NiDI configuration is done entirely in code, there's no excuse for not testing it.
+4. **It should be small and fast**. Other dependency injection libraries can be huge, bringing in many dependencies of their own. NiDI strives to be lean. Its only dependency is the Logging facade, SLF4J. 
+
+
+## A (slightly) more involved example
+
+Say we have two classes, Foo and Bar:
+
+	class Foo implements MyInterface {
+		Bar bar
+		
+		Foo(Bar bar){
+			this.bar = bar
+		}
+		...
+	}
+	
+	class Bar {
+		String barProperty
+		
+		Bar(String barProperty){
+			this.barProperty = barProperty
+		}
+	}
+	
+	//in whatever is using MyInterface...
+	String s = resolveBarProperty()
+	Bar bar = new Bar(s)
+	MyInterface foo = new Foo(bar)
+	foo.finallyDoSomethingWithFoo()
+	
+In this example, Foo depends on Bar, which needs a string in order to work properly. Normally, the developer would have to resolve which String to use for Bar, then create a new Bar with the string, then create a new Foo with the Bar. This can result in a lot of code that has little to do with the task at hand. The NiDI way moves all of that into the configuration class and provides a simple, declarative API for it:	
+	
+	//MyContextConfig.groovy
+	...
+	bind(MyInterface).to(Foo) //tells nidi that whenever I ask for a `MyInterface`, you should provide me with a `Foo`
+	register(Bar){ //makes nidi aware of Bar and able to instantiate it as needed
+		bindConstructorParam(String).toValue{-> "my string" } //this just takes a closure that returns the correct value
+	}
+	
+	//In whatever is using a Foo...
+	def foo = context.getInstance(MyInterface)
+	
+So there's a couple of differences here. First off, notice that in whatever method is actually using MyInterface, there's no logic for determining which implementation to use. Secondly, there's no code for manually creating a Bar. Instead, the Context takes care of that. The Context can, replace the word `new` in your code, and in most cases eliminates the need for Factories.
+
+## Configuration
+
+Typically, an application should have a single main context, which NiDI provides a static place for in the `ContextHolder` class. A simple way to bootstrap your application is to provide an implementation of `net.ijus.nidi.ContextConfig` and tell the Configuration class to set things up from that. 
 
 *Example ContextConfig:*
 
@@ -41,8 +95,7 @@ A Context takes care of instantiating the concrete implementations of all the cl
     ...
     public static void main(String[] args){
 		
-        Class contextConfigClass = determineContext()
-        Configuration.setMainContextFromClass(contextConfigClass)
+        Configuration.setMainContextFromClass(MyConfigClass.class)
         //now run application normally
         
         Context ctx = ContextHolder.getContext()
@@ -93,13 +146,12 @@ What if your implementation of `LoggingService` itself has additional dependenci
 
 *Scoping*
 
-Sometimes it's important that two classes use the same instance of a particular class. Scoping configuration in NiDI is exceedingly simple, but also allows for fine grained control over how instances get scoped, cached, and reused. When you bind a class to an implementation, you can specify a scope. There are four scopes:
+Sometimes it's important that two classes use the same instance of a particular class. Scoping configuration in NiDI is exceedingly simple, but also allows for fine grained control over how instances get scoped, cached, and reused. When you bind a class to an implementation, you can specify a scope. There are three scopes:
 
 net.ijus.nidi.Scope:
  
- - SINGLETON - If you use this scope, there will only ever be a single instance of the implementation, no matter how many contexts it's used in. 
- - CONTEXT\_GLOBAL - This scope means that each context will have it's own instance of the implementation class. This instance will be used for everything in that context.
- - ONE\_PER\_BINDING - Each time you `bind(Interface).to(Implementation)` you will get a single instance of the Implementation class.
+ - SINGLETON - If you use this scope, then the Binding will always return the same instance, every time.
+ - ONE\_PER\_BINDING - Each Binding that requires an instance of this class (as a Constructor param) will get it's own instance that will always be the same. So if the Classes Foo and Bar both depend on a LoggingService, which is scoped as ONE\_PER\_BINDING, then both would have their own instance of LoggingService. The instance of LoggingService given to the Foo Constructor would always be the same, though.
  - ALWAYS\_CREATE\_NEW - This is the default scope. Every time you call `context.getInstance()`  new instances of classes scoped as `ALWAYS\_CREATE\_NEW` will be created.
  
  Scopes can be applied as a detault for an entire context, and can also be set individually for specific implementation classes. 
@@ -113,7 +165,37 @@ net.ijus.nidi.Scope:
     //This is true even if you make the call from another context!
     
 
-# Limitations / Known Issues #
+# Advanced Usage
 
-- Currently, instantiation will fail if the implementation class has more than one public constructor. This limitation may or may not be lifted by adding a constructor annotation.
-- 
+**Classes with multiple constructors**
+If a Class has multiple constructors, you'll have to tell NiDI which one to use by annotating one of them with @Inject.
+
+**Bound Properties**
+Oftentimes, we'll have some property, a URL perhaps, that is required for several classes. NiDI addresses this use case by allowing bound properties. In the configuration for a context, you can call ContextBuilder's bindProperty() method to accomplish this.
+
+	//given the following class that requires a url
+	class UploadService {
+		String url
+		
+		UploadService(@RequiredBinding("uploadServURL") String url){
+			this.url = url
+		}
+		...
+	}
+	
+	//In the context configuration:
+	bindProperty("uploadServURL", "www.website.com") //you can bind to any object, or to a Closure that can return whatever value you like
+	
+Now, when you ask the Context for an instance of UploadService (or anything else that depends on that url property), it will come properly configured. The Context can also store any other properties you'd like to access. And, since we're doing configuration in code instead of XML properties can be anything, not just Strings. Any object can be bound to a property in the context.
+
+**Overrides for nested dependencies**
+Let's say we have many classes that all depend on our SearchInterface. In many cases, we'll want to use the same implementation for all of those classes, but not always. If we have some situations where we want to override the Binding that's in the context, we can simply declare the proper bindings using the bindConstructorParam() method in BindingBuilder.
+
+	bind(SearchService).to(BasicSearchService) //use this for everything, unless an override is present
+	bind(MyInterface).to(MyImpl){
+		bindConstructorParam(SearchService).to(ComplexSearchService)
+		//This same method works with bound properties, too. If a constructor param is annotated with @RequiredBinding('name')
+		// you could also use: bindConstructorParam('name')
+	}
+	
+	
