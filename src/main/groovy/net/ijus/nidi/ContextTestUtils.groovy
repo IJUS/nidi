@@ -14,8 +14,19 @@ public class ContextTestUtils {
 
 	static void clearContextHolder(){
 		log.info("Resetting the ContextHolder")
-		ContextHolder.singletons.clear()
-		ContextHolder.singletonCache.clearCache()
 		ContextHolder.setContext(null)
+	}
+
+	static long time(Closure work, long startTime = System.currentTimeMillis()){
+		work.call()
+		return System.currentTimeMillis() - startTime
+	}
+
+	static long timeAndLog(String taskName, Closure work){
+		long startTime = System.currentTimeMillis()
+		log.debug("Started ${taskName} at: ${startTime}")
+		long t = time(work, startTime)
+		log.debug("Finished ${taskName} in ${t} milliseconds")
+		return t
 	}
 }

@@ -1,6 +1,7 @@
 package net.ijus.nidi
 
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
+import net.ijus.nidi.builder.ContextBuilder;
 
 
 /**
@@ -9,7 +10,6 @@ import groovy.transform.CompileStatic;
 @CompileStatic
 public interface ContextConfig {
 
-
-	abstract void configure(Context ctx)
+	abstract void configure(ContextBuilder builder)
 
 }

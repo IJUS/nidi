@@ -9,28 +9,18 @@ import org.slf4j.LoggerFactory;
 public class ContextHolder {
 	private static final Logger log = LoggerFactory.getLogger(ContextHolder)
 
-	public static ImplementationCache singletonCache = new BasicImplementationCache()
-	public static Set<Class> singletons = [] as Set
-
-	/*
-	The declaration of the ctx must be below all other static fields, or things will seriously break.
-	Yes, this is a shitty solution. Yes, it will get fixed.
-	If you are reading this, please just fix it now.
-	 */
-	//TODO: initialize context in the getter instead of in static field initialization
-	private static Context ctx = initContext()
-
-	static boolean isSingleton(Class clazz){
-		return singletons.contains(clazz)
-	}
+	static Context ctx
 
 	static Context getContext(){
+		if (!ctx){
+			initContext()
+		}
 		return ctx
 	}
 
 	static void setContext(Context context) {
-		if (ctx != null && ctx != context) {
-			log.warn("The Context: ${ctx.getName()} is being replaced by the context: ${context?.getName()}")
+		if (ctx != null) {
+			log.warn("The Context in the ContextHolder is being replaced at runtime.")
 		}
 		ctx = context
 
