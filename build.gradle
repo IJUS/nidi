@@ -8,10 +8,48 @@ version = '0.2'
 
 group = "net.ijus"
 
+ext.m2Root = new XmlSlurper().parse(new File(System.getProperty("user.home"), ".m2/settings.xml"))
+ext.m2Spida = m2Root.servers.server.find{ it.id.text() == "spida" }
+ext.m2Repos = m2Root.profiles.profile.find{ it.id.text() == "artifactory" }.properties
+
+ext.m2Settings = [
+		username: m2Spida.username.text(),
+		password: m2Spida.password.text(),
+		repo: m2Repos.defaultLocation.text(),
+		exposed: m2Repos.exposedLocation.text(),
+		snapshots: m2Repos.snapshotsLocation.text(),
+		releases: m2Repos.releasesLocation.text()
+]
 
 repositories {
 	mavenLocal()
-    mavenCentral()
+	mavenCentral()
+	maven { url m2Settings.exposed }
+	maven {
+		credentials {
+			username m2Settings.username
+			password m2Settings.password
+		}
+		url m2Settings.repo
+	}
+}
+
+configurations {
+	deployerJars
+}
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			configuration = configurations.deployerJars
+			snapshotRepository(url: m2Settings.snapshots) {
+				authentication(userName: m2Settings.username, password: m2Settings.password)
+			}
+			repository(url: m2Settings.releases) {
+				authentication(userName: m2Settings.username, password: m2Settings.password)
+			}
+		}
+	}
 }
 
 dependencies {
@@ -24,6 +62,8 @@ dependencies {
 	testCompile 'org.objenesis:objenesis:1.4'
 
 	compile 'org.slf4j:slf4j-simple:1.7.5'
+
+	deployerJars "org.apache.maven.wagon:wagon-http:2.2"
 
 }
 
