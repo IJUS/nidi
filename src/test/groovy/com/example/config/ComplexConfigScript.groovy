@@ -38,7 +38,7 @@ public class ComplexConfigScript implements ContextConfig{
 
 
 			BindingBuilder fdsBuilder = bind(FraudDetectionService).to(ComplexFraudDetector)
-                    .bindConstructorParam('fraudDetURL').toValue({ 'www.test.com' } as InstanceGenerator)
+                    .bindConstructorParam('fraudDetURL').toObject("www.test-url.com")
             //IMPORTANT: this sets up the instance of ComplexFraudDetector
             // if it were chained on the end of the previous line, then it would be called on the inner binding builder
             // that's created by the call to .bindConstructorParam
