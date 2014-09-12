@@ -1,6 +1,7 @@
 package net.ijus.nidi.bindings
 
 import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.bindings.Binding
 
 /**
  * Created by pfried on 7/5/14.

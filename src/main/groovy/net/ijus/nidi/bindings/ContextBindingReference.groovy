@@ -6,6 +6,7 @@ import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.instantiation.InstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import net.ijus.nidi.bindings.Binding
 
 /**
  * Created by pfried on 7/5/14.

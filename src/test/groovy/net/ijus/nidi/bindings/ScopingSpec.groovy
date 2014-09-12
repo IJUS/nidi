@@ -22,13 +22,6 @@ class ScopingSpec extends Specification {
 		ContextTestUtils.clearContextHolder()
 	}
 
-	void "Scopes should be comparable based on their values"(){
-		expect:
-		Scope.SINGLETON < Scope.CONTEXT_GLOBAL
-		Scope.CONTEXT_GLOBAL < Scope.ONE_PER_BINDING
-		Scope.ONE_PER_BINDING < Scope.ALWAYS_CREATE_NEW
-
-	}
 
 	void "BindingFactory should inherit default scopes properly"(){
 		setup:

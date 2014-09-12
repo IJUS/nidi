@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.bindings.Binding
 
 /**
  * Created by pfried on 7/11/14.

@@ -1,6 +1,7 @@
 package net.ijus.nidi.builder
 
 import net.ijus.nidi.*
+import net.ijus.nidi.bindings.Binding
 import net.ijus.nidi.bindings.*
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import net.ijus.nidi.instantiation.InstanceGenerator
