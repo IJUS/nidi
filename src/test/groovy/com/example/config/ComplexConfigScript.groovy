@@ -13,6 +13,8 @@ import groovy.transform.CompileStatic
 import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.ContextBuilder
+import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 
 /**
  * Created by pfried on 7/19/14.
@@ -30,14 +32,14 @@ public class ComplexConfigScript implements ContextConfig{
 
 			bind(LoggingService).to(NamespacedLoggingService){
 				scope = Scope.ONE_PER_BINDING //CCProc/RefProc should always get one instance, and FraudDet should get a different one
-				bindConstructorParam('stringProperty').toValue { 'custom namespace' }
+				bindConstructorParam('stringProperty').toValue({ 'custom namespace' } as InstanceGenerator)
 			}
 
 			bind(FraudDetectionService).to(ComplexFraudDetector){
-				bindConstructorParam('fraudDetURL').toValue { 'www.test.com' }
-				setupInstance {
+				bindConstructorParam('fraudDetURL').toValue({ 'www.test.com' } as InstanceGenerator)
+				setupInstance({
 					it.whoYaGonnCall = "Ghostbusters"
-				}
+				} as InstanceSetupFunction)
 			}
 
 		}

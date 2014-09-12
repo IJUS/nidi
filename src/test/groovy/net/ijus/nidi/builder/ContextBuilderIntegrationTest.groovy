@@ -15,6 +15,8 @@ import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 import spock.lang.Specification
 
 /**
@@ -81,9 +83,9 @@ public class ContextBuilderIntegrationTest extends Specification {
 
 		when:
 		builder.bind(LoggingService).to(LoggingServiceImpl)
-		builder.register(ConcreteClassNoInterface).setupInstance {
+		builder.register(ConcreteClassNoInterface).setupInstance({
 			it.stringProperty = "custom value"
-		}
+		} as InstanceSetupFunction)
 		Context ctx = builder.build()
 
 		then:
@@ -97,7 +99,7 @@ public class ContextBuilderIntegrationTest extends Specification {
 		setup:
 		Context ctx = Configuration.configureNew{
 			bind(LoggingService).to(NamespacedLoggingService){
-				bindConstructorParam('stringProperty').toValue{ 'testString' }
+				bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
 			}
 		}
 

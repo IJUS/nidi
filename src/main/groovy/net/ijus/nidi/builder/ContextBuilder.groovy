@@ -6,6 +6,7 @@ import net.ijus.nidi.bindings.Binding
 import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.instantiation.InstanceGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -69,15 +70,20 @@ public class ContextBuilder {
 	 * @param value the value to be bound to
 	 * @return the BindingBuilder, for chaining additional calls
 	 */
-	BindingBuilder bindProperty(String propertyName, Object value){
-		return bindProperty(propertyName){ value }
+	BindingBuilder bindProperty(final String propertyName, final Object value){
+		return bindProperty(propertyName, new InstanceGenerator() {
+            @Override
+            Object createNewInstance() {
+                return value
+            }
+        })
 	}
 
-	BindingBuilder bindProperty(String propertyName, Closure returnsValue) {
+	BindingBuilder bindProperty(String propertyName, InstanceGenerator returnsValue) {
 		Class valueClass
 
 		try {
-			valueClass = returnsValue.call().getClass()
+			valueClass = returnsValue.createNewInstance().getClass()
 		} catch (Exception e) {
 			throw new InvalidConfigurationException("Attempted to bind the property: ${propertyName} to the return value of a Closure, but the closure threw: ${e.getClass().getSimpleName()} when it was called", e)
 		}

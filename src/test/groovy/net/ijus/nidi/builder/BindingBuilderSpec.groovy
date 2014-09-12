@@ -15,6 +15,7 @@ import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.*
+import net.ijus.nidi.instantiation.InstanceGenerator
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
@@ -149,7 +150,7 @@ public class BindingBuilderSpec extends Specification {
 		def builder = new BindingBuilder(Map, null)
 
 		when:
-		builder.toValue {['listItemOne', 'two', 'three']}
+		builder.toValue({['listItemOne', 'two', 'three']} as InstanceGenerator)
 
 		then:
 		thrown(InvalidConfigurationException)
@@ -160,7 +161,7 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder builder = new BindingBuilder(String, null)
 
 		when:
-		builder.toValue { "testValue" }
+		builder.toValue({ "testValue" } as InstanceGenerator)
 
 		then:
 		builder.instanceGenerator != null

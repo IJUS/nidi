@@ -7,6 +7,7 @@ import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
 import net.ijus.nidi.ContextTestUtils
 import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 import spock.lang.*
 
 /**
@@ -112,9 +113,9 @@ class ScopingSpec extends Specification {
 	void "Singleton bindings should always return the same instance"() {
 		setup:
 		Context ctx = Configuration.configureNew {
-			bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor).setupInstance { BasicCCProcessor proc ->
+			bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor).setupInstance({ BasicCCProcessor proc ->
 				proc.someProperty = "customValue"
-			}
+			} as InstanceSetupFunction)
 			bind(RefundProcessor).reference(CreditCardProcessor)
 		}
 

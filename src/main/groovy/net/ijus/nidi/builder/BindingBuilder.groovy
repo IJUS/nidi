@@ -5,6 +5,7 @@ import net.ijus.nidi.bindings.Binding
 import net.ijus.nidi.bindings.*
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -16,7 +17,7 @@ import java.lang.reflect.Modifier
  * Created by pfried on 7/2/14.
  */
 
-class BindingBuilder {
+class BindingBuilder<T> {
 	static final Logger log = LoggerFactory.getLogger(BindingBuilder)
 
 	/**
@@ -32,7 +33,7 @@ class BindingBuilder {
 	/**
 	 * The base class for this binding. In most cases, an Interface or Abstract class
 	 */
-	Class baseClass
+	Class<T> baseClass
 
 	/**
 	 * Specified scope for the binding. Will inherit from the context builder if not specified
@@ -42,7 +43,7 @@ class BindingBuilder {
 	/**
 	 * If this property is set, this is the closure that will get called to setup properties on a newly created instance
 	 */
-	Closure instanceConfigClosure
+	InstanceSetupFunction<? extends T> instanceConfigClosure
 
 	/**
 	 * Holds BindingBuilders that are meant to override the bindings in the parent context.
@@ -59,7 +60,7 @@ class BindingBuilder {
 	/**
 	 * The Class of whatever will be filling the roll of the base class. baseClass.isAssignableFrom(impl) must be true!
 	 */
-	Class impl
+	Class<? extends T> impl
 
 	/**
 	 * If this binding simply references another binding in the context, then this property will be set. Either the impl,
@@ -71,7 +72,7 @@ class BindingBuilder {
 
 	Binding binding
 
-	BindingBuilder(Class clazz, ContextBuilder ctxBuilder) {
+	BindingBuilder(Class<T> clazz, ContextBuilder ctxBuilder) {
 		this.baseClass = clazz
 		this.ctxBuilder = ctxBuilder
 	}
@@ -96,7 +97,7 @@ class BindingBuilder {
 	 * @param instanceSetupClosure closure that will be called with the newly created instance as an argument
 	 * @return this BindingBuilder for chaining
 	 */
-	BindingBuilder setupInstance(Closure instanceSetupClosure) {
+	BindingBuilder setupInstance(InstanceSetupFunction<? extends T> instanceSetupClosure) {
 		checkFinalization()
 		this.instanceConfigClosure = instanceSetupClosure
 		return this
@@ -126,7 +127,7 @@ class BindingBuilder {
 	 * @param config optional configguration closure
 	 * @return this BindingBuilder for chained method calls
 	 */
-	BindingBuilder to(Class clazz, Closure config = null) {
+	BindingBuilder to(Class<? extends T> clazz, Closure config = null) {
 		checkFinalization()
 		this.impl = clazz
 		validateClassAssignment()
@@ -175,18 +176,18 @@ class BindingBuilder {
 	 * @param closure returns a value to bind to.
 	 * @return
 	 */
-	BindingBuilder toValue(Closure closure) {
+	BindingBuilder toValue(InstanceGenerator<? extends T> generator) {
 		checkFinalization()
-		this.instanceGenerator = closure as InstanceGenerator
+		this.instanceGenerator = generator
 
 		try {
-			def instance = closure.call()
+			T instance = generator.createNewInstance()
 			this.impl = instance.getClass()
 			validateClassAssignment()
 		} catch (InvalidConfigurationException e){
 			throw e
 		} catch (Exception e) {
-			throw new InvalidConfigurationException("Attempted to bind ${name(baseClass)} to the value of a closure, but the closure threw an exception", e)
+			throw new InvalidConfigurationException("Attempted to bind ${name(baseClass)} to the value of an InstanceGenerator, but the generator threw an exception", e)
 		}
 		return this
 	}
