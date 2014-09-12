@@ -33,11 +33,9 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
 
 		when:
-		builder.to(ComplexCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
-			bindConstructorParam(FraudDetectionService).to(FraudDetectorImpl)
-		}
+		builder.bindTo(ComplexCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW)
+        builder.bindConstructorParam(LoggingService).to(LoggingServiceImpl)
+        builder.bindConstructorParam(FraudDetectionService).to(FraudDetectorImpl)
 		Binding result = builder.build()
 
 		then:
@@ -53,20 +51,14 @@ public class BindingBuilderSpec extends Specification {
 
 		when:
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
-		builder.to(BasicCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
-		}
+		builder.bindTo(BasicCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW).bindConstructorParam(LoggingService).to(LoggingServiceImpl)
 
 		then:
 		thrown(InvalidConfigurationException)
 
 		when:
 		BindingBuilder b2 = new BindingBuilder(CreditCardProcessor, ctxBuilder)
-		b2.to(BasicCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam("nonExistantProp").toValue {"stringy"}
-		}
+		b2.to(BasicCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW).bindConstructorParam("nonExistantProp").toValue({"stringy"} as InstanceGenerator)
 
 		then:
 		thrown(InvalidConfigurationException)

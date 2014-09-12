@@ -98,9 +98,7 @@ public class ContextBuilderIntegrationTest extends Specification {
 	void "Bindings should allow for specifying constructor params"(){
 		setup:
 		Context ctx = Configuration.configureNew{
-			bind(LoggingService).to(NamespacedLoggingService){
-				bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
-			}
+			bind(LoggingService).to(NamespacedLoggingService).bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
 		}
 
 		expect:

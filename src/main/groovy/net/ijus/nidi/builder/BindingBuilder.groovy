@@ -120,24 +120,25 @@ class BindingBuilder<T> {
 	 *         }
 	 *     }
 	 * </code>
-	 * The Closure is just syntactic sugar. Everything done in the closure can also be done by just calling methods on the
-	 * BindingBuilder directly. It just helps keep things a bit more clear in complex ContextConfig classes.
 	 *
 	 * @param clazz The concrete implementation to be used for this binding
-	 * @param config optional configguration closure
 	 * @return this BindingBuilder for chained method calls
 	 */
-	BindingBuilder to(Class<? extends T> clazz, Closure config = null) {
-		checkFinalization()
-		this.impl = clazz
-		validateClassAssignment()
-
-		if (config) {
-			config.setDelegate(this)
-			config.call()
-		}
-		return this
+	BindingBuilder to(Class<? extends T> clazz) {
+		return bindTo(clazz)
 	}
+
+    /**
+     * alias for to(Class)
+     * @param clazz
+     * @return
+     */
+    BindingBuilder<T> bindTo(Class<? extends T> clazz){
+        checkFinalization()
+        this.impl = clazz
+        validateClassAssignment()
+        return this
+    }
 
 	/**
 	 * Used when a single concrete implementation is to be used for two separate interfaces.

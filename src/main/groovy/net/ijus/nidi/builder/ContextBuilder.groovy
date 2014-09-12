@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.Modifier
 
 /**
- * Created by pfried on 7/2/14.
+ * Builder for creating a Context. This is the main class used for configuration.
  */
 
 @CompileStatic
