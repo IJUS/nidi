@@ -63,9 +63,9 @@ public class ContextBuilder {
 	}
 
 	/**
-	 * Sets a property that will be bound to any Constructor parameters annotated with @RequiredBinding('myProperty')
+	 * Sets a property that will be bound to any Constructor parameters annotated with @Require('myProperty')
 	 *
-	 * @param propertyName the property name that matches the value of a RequiredBinding
+	 * @param propertyName the property name that matches the value of a Require
 	 * @param value the value to be bound to
 	 * @return the BindingBuilder, for chaining additional calls
 	 */

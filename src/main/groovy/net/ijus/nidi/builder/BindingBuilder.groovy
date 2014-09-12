@@ -226,7 +226,7 @@ class BindingBuilder {
 		}
 
 		if (!paramClass) {
-			throw new InvalidConfigurationException("Could not find a matching constructor parameter: ${param}. In order to use bindConstructorParam(${param}), the constructor parameter must be annotated with: @RequiredBinding('${param}')")
+			throw new InvalidConfigurationException("Could not find a matching constructor parameter: ${param}. In order to use bindConstructorParam(${param}), the constructor parameter must be annotated with: @Require('${param}')")
 		}
 
 		BindingBuilder bb = new BindingBuilder(paramClass, this.ctxBuilder)
@@ -238,7 +238,7 @@ class BindingBuilder {
 	/**
 	 * Creates a binding just for this constructor parameter. The constructor must only have one parameter of the given type.
 	 * If the constructor has 2 or more parameters of one type, then the named property style of binding should be used, and
-	 * the parameters themselves should be annotated with @RequiredBinding("<property-name>")
+	 * the parameters themselves should be annotated with @Require("<property-name>")
 	 *
 	 * @param paramType the class of the constructor parameter
 	 * @return
@@ -256,7 +256,7 @@ class BindingBuilder {
 			throw new InvalidConfigurationException("called bindConstructorParam() with an invalid Class argument. The class: ${name(paramType)} is not a parameter in the resolved constructor for: ${name(impl)}")
 
 		} else if (types.count { it == paramType } > 1) {
-			throw new InvalidConfigurationException("The Constructor for ${name(impl)} takes multiple parameters of type: ${name(paramType)}. Cannot use Class to identify params, must use @RequiredBinding('<name>') instead")
+			throw new InvalidConfigurationException("The Constructor for ${name(impl)} takes multiple parameters of type: ${name(paramType)}. Cannot use Class to identify params, must use @Require('<name>') instead")
 		}
 
 		// ok, now that that's out of the way, we can just return a new bindingBuilder
@@ -304,7 +304,7 @@ class BindingBuilder {
 			Annotation[] paramAnnotations = allAnnotations[outer]
 			for (int inner = 0; inner < paramAnnotations.length; inner++) {
 				Annotation a = paramAnnotations[inner]
-				if (a instanceof RequiredBinding) {
+				if (a instanceof Require) {
 					boundParams[outer] = a.value()
 				}
 			}
@@ -334,7 +334,7 @@ class BindingBuilder {
 			Class paramType = constructorParams[paramIdx]
 
 			if (boundAnnotationValues[paramIdx]) {
-				//This Constructor parameter has a @RequiredBinding annotation
+				//This Constructor parameter has a @Require annotation
 				String paramName = boundAnnotationValues[paramIdx]
 
 				paramBindings[paramIdx] = buildPropertyBinding(paramName)
