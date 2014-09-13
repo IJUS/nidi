@@ -24,38 +24,47 @@ import java.util.*;
  */
 public class BindingBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(BindingBuilder.class);
+
     /**
      * if the bindingBuilder is finalized, then no other modifications may be made to it.
      */
     private boolean isFinalized = false;
+
     /**
      * always has a reference to the parent context builder
      */
     private ContextBuilder ctxBuilder;
+
     /**
      * The base class for this binding. In most cases, an Interface or Abstract class
      */
     private Class<T> baseClass;
+
     /**
      * Specified scope for the binding. Will inherit from the context builder if not specified
      */
     private Scope scope;
+
     /**
      * If this property is set, this is the closure that will get called to setup properties on a newly created instance
      */
     private InstanceSetupFunction<? extends T> instanceConfigClosure;
+
     /**
      * Holds BindingBuilders that are meant to override the bindings in the parent context.
      */
     private Map<Object, BindingBuilder> innerBindings = new LinkedHashMap<Object, BindingBuilder>();
+
     /**
      * Instance Generator simply provides an instance of the implementation, whatever it may be
      */
     private InstanceGenerator instanceGenerator;
+
     /**
      * The Class of whatever will be filling the roll of the base class. baseClass.isAssignableFrom(impl) must be true!
      */
     private Class<? extends T> impl;
+
     /**
      * If this binding simply references another binding in the context, then this property will be set. Either the impl,
      * or the bindingReferenceClass can be set, but never both. Referencing another Binding is for situations where a single
@@ -444,29 +453,30 @@ public class BindingBuilder<T> {
      * Builds a binding for a constructor param that references a binding in the constructor.
      *
      * @param refClass
-     * @param provides
      * @return
      */
-    protected Binding buildContextRefBinding(Class refClass, Class provides) {
+    protected <E> Binding<E> buildContextRefBinding(Class refClass, Class<E> provides) {
         log.trace("buildContextRefBinding: baseType=" + name(refClass));
         if (!ctxBuilder.containsBindingFor(refClass)) {
             throw new InvalidConfigurationException("Attempted to reference a Binding for " + String.valueOf(refClass) + " in the ContextBuilder, but no Binding for that class has been declared");
         }
 
         Context ctx = ctxBuilder.getContextRef();
-        Binding b = new ContextBindingReference(refClass, ctx, provides);
+        Binding<E> b = new ContextBindingReference<E>(refClass, ctx, provides);
         log.debug("bindingBuilder returning ContextBindingReference for " + name(refClass));
         return b;
     }
 
     /**
      * Builds a binding for a constructor param that references a binding in the constructor.
+     * This creates a contextRefBinding that has the given refClass both as the referencedClass
+     * AND as the baseClass (what it provides)
      *
      * @param refClass
      * @return
      */
     protected Binding buildContextRefBinding(Class refClass) {
-        return buildContextRefBinding(refClass, null);
+        return buildContextRefBinding(refClass, refClass);
     }
 
     /**

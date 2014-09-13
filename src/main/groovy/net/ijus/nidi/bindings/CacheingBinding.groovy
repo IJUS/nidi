@@ -11,15 +11,15 @@ import net.ijus.nidi.bindings.Binding
  */
 
 @CompileStatic
-public class CacheingBinding implements Binding {
+public class CacheingBinding<T> implements Binding<T> {
 
-	def cachedInstance
-	InstanceGenerator instanceGenerator
-	Class boundClass
-	Class implClass
+	T cachedInstance
+	InstanceGenerator<T> instanceGenerator
+	Class<T> boundClass
+	Class<? extends T> implClass
 	Scope scope
 
-	CacheingBinding(InstanceGenerator instanceGenerator, Class boundClass, Class implClass, Scope scope) {
+	CacheingBinding(InstanceGenerator<T> instanceGenerator, Class<T> boundClass, Class<? extends T> implClass, Scope scope) {
 		this.instanceGenerator = instanceGenerator
 		this.boundClass = boundClass
 		this.implClass = implClass
@@ -28,7 +28,7 @@ public class CacheingBinding implements Binding {
 	}
 
 	@Override
-	def getInstance() {
+	T getInstance() {
 		if (!cachedInstance) {
 			this.cachedInstance = instanceGenerator.createNewInstance()
 		}
@@ -36,12 +36,12 @@ public class CacheingBinding implements Binding {
 	}
 
 	@Override
-	Class getImplClass() {
+	Class<? extends T> getImplClass() {
 		return this.implClass
 	}
 
 	@Override
-	Class getBoundClass() {
+	Class<T> getBoundClass() {
 		return this.boundClass
 	}
 
@@ -56,7 +56,7 @@ public class CacheingBinding implements Binding {
 	}
 
 	@Override
-	InstanceGenerator getInstanceGenerator(){
+	InstanceGenerator<T> getInstanceGenerator(){
 		this.instanceGenerator
 	}
 

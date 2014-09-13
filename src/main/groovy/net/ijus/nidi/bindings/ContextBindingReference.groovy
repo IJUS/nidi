@@ -13,34 +13,49 @@ import net.ijus.nidi.bindings.Binding
  */
 
 @CompileStatic
-public class ContextBindingReference implements Binding {
+public class ContextBindingReference<T> implements Binding<T> {
 	static final Logger log = LoggerFactory.getLogger(ContextBindingReference)
 
+    /**
+     * referencedClass can be anything. It doesn't necessarily have to extend T
+     */
 	Class referencedClass
-	Context ctx
-	Class provides
-	Binding resolvedBinding
 
-	ContextBindingReference(Class refClass, Context ctx, Class provides = null) {
+    /**
+     * The context to get the binding from
+     */
+	Context ctx
+
+    /**
+     * The resolved Binding must provide a T as its impl class in order to be valid
+     */
+	Binding<T> resolvedBinding
+
+    /**
+     * This is the baseClass
+     */
+    Class<T> provides
+
+	ContextBindingReference(Class refClass, Context ctx, Class<T> provides) {
 		this.referencedClass = refClass
 		this.ctx = ctx
-		this.provides = provides?: refClass
+		this.provides = provides
 
 	}
 
 	@Override
-	def getInstance() {
+	T getInstance() {
 		return getResolvedBinding().getInstance()
 	}
 
 	@Override
-	Class getImplClass() {
+	Class<? extends T> getImplClass() {
 		return getResolvedBinding().getImplClass()
 	}
 
 	@Override
-	Class getBoundClass() {
-		provides
+	Class<T> getBoundClass() {
+		return this.provides;
 	}
 
 	@Override
@@ -49,34 +64,34 @@ public class ContextBindingReference implements Binding {
 	}
 
 	@Override
-	InstanceGenerator getInstanceGenerator() {
+	InstanceGenerator<T> getInstanceGenerator() {
 		return getResolvedBinding().getInstanceGenerator()
 	}
 
 	@Override
 	void validate() {
-		Binding b = ctx.getBinding(referencedClass)
-		if (!b) {
-			throw new InvalidConfigurationException("The Context does not contain a binding for ${referencedClass.getCanonicalName()} but it definitely should")
-		}
+		Binding b = getResolvedBinding();
 		b.validate()
 	}
 
-	Binding getResolvedBinding() {
+	Binding<T> getResolvedBinding() {
 		if (!resolvedBinding) {
 			this.resolvedBinding = createResolvedBinding()
 		}
 		return resolvedBinding
 	}
 
-	Binding createResolvedBinding(){
-		Binding b = ctx.getBinding(this.referencedClass)
+	Binding<T> createResolvedBinding(){
+		Binding<T> b = ctx.getBinding(this.referencedClass)
 		if (!b) {
 			throw new InvalidConfigurationException("The Context does not contain a Binding for class: ${referencedClass.name}. Perhaps the referenced Binding trying to be created to early")
 		}
 		Scope s = b.getScope()
 		log.debug("Resolving binding for class: ${this.referencedClass.name} with scope: ${s}")
 
+        /*
+        Depending on the Scope, we may need to wrap the resolved binding in a CachingBinding
+         */
 		if (s == Scope.ONE_PER_BINDING) {
 			b = new CacheingBinding(b.getInstanceGenerator(), this.referencedClass, b.getImplClass(), Scope.ONE_PER_BINDING)
 		}

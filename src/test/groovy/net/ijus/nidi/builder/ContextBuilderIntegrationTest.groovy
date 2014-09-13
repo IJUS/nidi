@@ -1,12 +1,7 @@
 package net.ijus.nidi.builder
 
 import com.example.config.ComplexConfigScript
-import com.example.impl.BasicCCProcessor
-import com.example.impl.ComplexCCProcessor
-import com.example.impl.ConcreteClassNoInterface
-import com.example.impl.FraudDetectorImpl
-import com.example.impl.LoggingServiceImpl
-import com.example.impl.NamespacedLoggingService
+import com.example.impl.*
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
