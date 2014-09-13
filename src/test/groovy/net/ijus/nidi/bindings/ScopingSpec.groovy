@@ -5,6 +5,7 @@ import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.ContextTestUtils
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.instantiation.InstanceSetupFunction
@@ -26,10 +27,10 @@ class ScopingSpec extends Specification {
 
 	void "BindingFactory should inherit default scopes properly"(){
 		setup:
-		Context ctx = Configuration.configureNew{
-			defaultScope = currentScope
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-		}
+		Context ctx = Configuration.configureNew({
+			it.defaultScope = currentScope
+			it.bind(CreditCardProcessor).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when:
 		Scope result = ctx.bindingsMap.get(CreditCardProcessor).getScope()
@@ -45,9 +46,9 @@ class ScopingSpec extends Specification {
 
 	void "setting scope to always create new should yield a new instance every time"() {
 		setup:
-		Context ctx = Configuration.configureNew {
-			bind(CreditCardProcessor).withScope(Scope.ALWAYS_CREATE_NEW).to(BasicCCProcessor)
-		}
+		Context ctx = Configuration.configureNew({
+			it.bind(CreditCardProcessor).withScope(Scope.ALWAYS_CREATE_NEW).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when: "get a couple of instances"
 		def inst1 = ctx.getInstance(CreditCardProcessor)
@@ -62,11 +63,11 @@ class ScopingSpec extends Specification {
 
 	void "Binding scope should use one instance per binding"() {
 		setup:
-		Context ctx1 = Configuration.configureNew {
+		Context ctx1 = Configuration.configureNew({
 
-			bind(CreditCardProcessor).withScope(Scope.ONE_PER_BINDING).to(BasicCCProcessor)
-			bind(RefundProcessor).withScope(Scope.ONE_PER_BINDING).to(BasicCCProcessor)
-		}
+			it.bind(CreditCardProcessor).withScope(Scope.ONE_PER_BINDING).to(BasicCCProcessor)
+			it.bind(RefundProcessor).withScope(Scope.ONE_PER_BINDING).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when: "get instances of both classes"
 		def ccProc = ctx1.getInstance(CreditCardProcessor)
@@ -87,13 +88,13 @@ class ScopingSpec extends Specification {
 
 	void "Context global scope should result in one instace per context"() {
 		setup:
-		Context ctx1 = Configuration.configureNew {
-			bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
-		}
+		Context ctx1 = Configuration.configureNew({
+			it.bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
+		} as ContextConfig)
 
-		Context ctx2 = Configuration.configureNew {
-			bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
-		}
+		Context ctx2 = Configuration.configureNew({
+			it.bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when:
 		def inst1 = ctx1.getInstance(CreditCardProcessor)
@@ -112,12 +113,12 @@ class ScopingSpec extends Specification {
 
 	void "Singleton bindings should always return the same instance"() {
 		setup:
-		Context ctx = Configuration.configureNew {
-			bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor).setupInstance({ BasicCCProcessor proc ->
+		Context ctx = Configuration.configureNew({
+			it.bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor).setupInstance({ BasicCCProcessor proc ->
 				proc.someProperty = "customValue"
 			} as InstanceSetupFunction)
-			bind(RefundProcessor).reference(CreditCardProcessor)
-		}
+			it.bind(RefundProcessor).reference(CreditCardProcessor)
+		} as ContextConfig)
 
 		when: "get instances for both implementations"
 		def ccProc = ctx.getInstance(CreditCardProcessor)

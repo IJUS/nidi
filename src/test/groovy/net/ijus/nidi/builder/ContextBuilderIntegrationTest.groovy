@@ -13,6 +13,7 @@ import com.example.interfaces.LoggingService
 import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.instantiation.InstanceGenerator
@@ -97,9 +98,9 @@ public class ContextBuilderIntegrationTest extends Specification {
 
 	void "Bindings should allow for specifying constructor params"(){
 		setup:
-		Context ctx = Configuration.configureNew{
-			bind(LoggingService).to(NamespacedLoggingService).bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
-		}
+		Context ctx = Configuration.configureNew({
+			it.bind(LoggingService).to(NamespacedLoggingService).bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
+		} as ContextConfig)
 
 		expect:
 		def instance = ctx.getInstance(LoggingService)

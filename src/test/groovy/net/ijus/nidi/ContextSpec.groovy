@@ -25,11 +25,11 @@ public class ContextSpec extends Specification {
 
 	void "context should handle instantiating objects with nested dependencies"(){
 		setup:
-		Context ctx = configureNew{
-			bind(CreditCardProcessor).to(ComplexCCProcessor)
-			bind(FraudDetectionService).to(FraudDetectorImpl)
-			bind(LoggingService).to(LoggingServiceImpl)
-		}
+		Context ctx = configureNew({
+			it.bind(CreditCardProcessor).to(ComplexCCProcessor)
+			it.bind(FraudDetectionService).to(FraudDetectorImpl)
+			it.bind(LoggingService).to(LoggingServiceImpl)
+		} as ContextConfig)
 
 		when: "get the complex instance"
 		def instance = ctx.getInstance(CreditCardProcessor)
@@ -44,9 +44,9 @@ public class ContextSpec extends Specification {
 
 	void "context should get basic instance correctly"() {
 		setup:
-		Context ctx = configureNew{
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-		}
+		Context ctx = configureNew({
+			it.bind(CreditCardProcessor).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when:
 		def instance = ctx.getInstance(CreditCardProcessor)
