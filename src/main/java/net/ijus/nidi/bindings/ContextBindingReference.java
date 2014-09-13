@@ -1,14 +1,10 @@
 package net.ijus.nidi.bindings;
 
-import groovy.transform.CompileStatic;
 import net.ijus.nidi.Context;
 import net.ijus.nidi.InvalidConfigurationException;
 import net.ijus.nidi.instantiation.InstanceGenerator;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.Time;
 
 /**
  * Represents a reference to another binding in the Context. Every time a Class' constructor requires another class, a new
@@ -78,7 +74,7 @@ public class ContextBindingReference<T> implements Binding<T> {
     }
 
     public Binding<T> getResolvedBinding() {
-        if (!DefaultGroovyMethods.asBoolean(resolvedBinding)) {
+        if (resolvedBinding == null) {
             this.resolvedBinding = createResolvedBinding();
         }
 
@@ -98,7 +94,7 @@ public class ContextBindingReference<T> implements Binding<T> {
         Depending on the Scope, we may need to wrap the resolved binding in a CachingBinding
          */
         if (s.equals(Scope.ONE_PER_BINDING)) {
-            b = new CacheingBinding(b.getInstanceGenerator(), this.referencedClass, b.getImplClass(), Scope.ONE_PER_BINDING);
+            b = new CachingBinding(b.getInstanceGenerator(), this.referencedClass, b.getImplClass(), Scope.ONE_PER_BINDING);
         }
 
         return b;

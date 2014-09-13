@@ -1,23 +1,16 @@
 package net.ijus.nidi.instantiation;
 
-import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
 import net.ijus.nidi.InvalidConfigurationException;
 import net.ijus.nidi.bindings.Binding;
 import net.ijus.nidi.utils.ClassUtils;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by pfried on 7/5/14.
  */
-@CompileStatic
 public class ConstructorInstanceGenerator<T> implements InstanceGenerator<T> {
     private static final Logger log = LoggerFactory.getLogger(ConstructorInstanceGenerator.class);
 
@@ -58,7 +51,15 @@ public class ConstructorInstanceGenerator<T> implements InstanceGenerator<T> {
         }
 
         try {
-            return this.clazz.getConstructor(args);
+            Constructor<? extends T> resolved = this.clazz.getConstructor(args);
+
+            /*
+            Even though nidi only uses public constructors, setting it accessible causes java to skip
+            the access checks altogether. This improves performance, especially if we're going to be generating a lot
+            of instances.
+             */
+            resolved.setAccessible(true);
+            return resolved;
 
         } catch (NoSuchMethodException e){
             throw new InvalidConfigurationException("The Class " + clazz.getName() + " does not have an accessible constructor for arguments: " + ClassUtils.classNames(args));

@@ -8,8 +8,6 @@ import net.ijus.nidi.Context
 import net.ijus.nidi.instantiation.InstanceGenerator
 import spock.lang.Specification
 
-import static spock.lang.MockingApi.*
-
 /**
  * Created by pfried on 7/18/14.
  */
@@ -76,7 +74,7 @@ public class ContextBindingReferenceSpec extends Specification {
         Binding result = bindingRef.getResolvedBinding()
 
         then:
-        result instanceof CacheingBinding
+        result instanceof CachingBinding
         result.getInstance() == '123'
     }
 

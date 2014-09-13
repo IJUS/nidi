@@ -1,6 +1,5 @@
 package net.ijus.nidi;
 
-import groovy.transform.CompileStatic;
 import net.ijus.nidi.bindings.Binding;
 
 import java.util.LinkedHashMap;
@@ -9,7 +8,6 @@ import java.util.Map;
 /**
  * Created by pfried on 6/16/14.
  */
-@CompileStatic
 public class Context {
     private Map<Object, Binding> bindingsMap = new LinkedHashMap<Object, Binding>();
 

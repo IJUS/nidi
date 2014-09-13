@@ -1,7 +1,5 @@
 package net.ijus.nidi.builder;
 
-import groovy.lang.Closure;
-import groovy.lang.Reference;
 import net.ijus.nidi.Context;
 import net.ijus.nidi.Inject;
 import net.ijus.nidi.InvalidConfigurationException;
@@ -10,7 +8,6 @@ import net.ijus.nidi.bindings.*;
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceSetupFunction;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -285,7 +282,7 @@ public class BindingBuilder<T> {
      */
     public <E> BindingBuilder<E> bindConstructorParam(final Class<E> paramType) {
         checkFinalization();
-        if (!DefaultGroovyMethods.asBoolean(impl)) {
+        if (impl == null) {
             throw new InvalidConfigurationException("Cannot call bindConstructorParam() yet because the implementation class has not been set");
         }
 
@@ -322,7 +319,7 @@ public class BindingBuilder<T> {
      * @param s
      */
     protected void inheritScope(Scope s) {
-        if (!DefaultGroovyMethods.asBoolean(this.scope)) {
+        if (this.scope == null) {
             this.scope = s;
         }
 
@@ -418,7 +415,7 @@ public class BindingBuilder<T> {
      */
     protected Binding buildNormalInnerBinding(final Class clazz) {
         BindingBuilder bb = this.innerBindings.get(clazz);
-        if (!DefaultGroovyMethods.asBoolean(bb)) {
+        if (bb == null) {
             throw new InvalidConfigurationException("Expected to find an inner binding for " + name(clazz) + ", but none was found");
         }
 
@@ -526,7 +523,7 @@ public class BindingBuilder<T> {
      * makes sure nobody tried to bind to an incompatible class
      */
     public void validateClassAssignment() {
-        if (!DefaultGroovyMethods.asBoolean(impl) && !DefaultGroovyMethods.asBoolean(bindingReferenceClass)) {
+        if (impl == null && bindingReferenceClass == null) {
             throw new InvalidConfigurationException("The Class: " + name(baseClass) + " was declared to be bound but the implementation class is null");
 
         } else if (impl != null && !baseClass.isAssignableFrom(impl)) {
@@ -602,7 +599,7 @@ public class BindingBuilder<T> {
         if (this.scope.equals(Scope.ALWAYS_CREATE_NEW)) {
             b = new BasicBinding(this.baseClass, this.impl, instanceGenerator);
         } else {
-            b = new CacheingBinding(instanceGenerator, this.baseClass, this.impl, this.scope);
+            b = new CachingBinding(instanceGenerator, this.baseClass, this.impl, this.scope);
         }
 
         return b;

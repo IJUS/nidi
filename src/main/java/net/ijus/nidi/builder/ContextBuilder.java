@@ -1,6 +1,5 @@
 package net.ijus.nidi.builder;
 
-import groovy.transform.CompileStatic;
 import net.ijus.nidi.Context;
 import net.ijus.nidi.bindings.Binding;
 import net.ijus.nidi.ContextConfig;
