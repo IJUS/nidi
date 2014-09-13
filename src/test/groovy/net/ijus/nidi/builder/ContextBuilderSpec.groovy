@@ -10,6 +10,7 @@ import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
 import spock.lang.Specification
@@ -42,8 +43,8 @@ public class ContextBuilderSpec extends Specification {
 	void "inheriting from a parent should not override the default scope if it has been specified"(){
 		setup:
 		def parentConfig = {
-			defaultScope = Scope.SINGLETON
-		}
+			it.defaultScope = Scope.SINGLETON
+		} as ContextConfig
 		ContextBuilder builder = new ContextBuilder()
 
 		when:
@@ -59,8 +60,8 @@ public class ContextBuilderSpec extends Specification {
 	void "inheriting from a parent should set the default scope if it has not been specified"(){
 		setup:
 		def parentConfig = {
-			defaultScope = Scope.SINGLETON
-		}
+			it.defaultScope = Scope.SINGLETON
+		} as ContextConfig
 		ContextBuilder builder = new ContextBuilder()
 
 		when:
