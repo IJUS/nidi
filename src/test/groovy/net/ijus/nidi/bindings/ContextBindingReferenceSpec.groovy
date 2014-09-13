@@ -5,6 +5,7 @@ import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.LoggingService
 import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Context
+import net.ijus.nidi.instantiation.InstanceGenerator
 import spock.lang.Specification
 
 import static spock.lang.MockingApi.*
@@ -38,6 +39,7 @@ public class ContextBindingReferenceSpec extends Specification {
         Binding binding = Mock()
         binding.getBoundClass() >> CreditCardProcessor
         binding.getImplClass() >> ComplexCCProcessor
+        binding.getScope() >> Scope.CONTEXT_GLOBAL
 
         Context ctx = Mock()
         ctx.getBinding(CreditCardProcessor) >> binding
@@ -50,6 +52,32 @@ public class ContextBindingReferenceSpec extends Specification {
         then:
         result == binding
 
+    }
+
+    void "referencing a binding with scope.ONE_PER_BINDING should create a new CachingBinding"(){
+        setup:
+        Binding binding = Mock()
+        binding.getBoundClass() >> CreditCardProcessor
+        binding.getImplClass() >> ComplexCCProcessor
+        binding.getScope() >> Scope.ONE_PER_BINDING
+        binding.getInstanceGenerator() >> new InstanceGenerator() {
+            @Override
+            Object createNewInstance() {
+                return "123"
+            }
+        }
+
+        Context ctx = Mock()
+        ctx.getBinding(CreditCardProcessor) >> binding
+
+        ContextBindingReference bindingRef = new ContextBindingReference(CreditCardProcessor, ctx, RefundProcessor)
+
+        when:
+        Binding result = bindingRef.getResolvedBinding()
+
+        then:
+        result instanceof CacheingBinding
+        result.getInstance() == '123'
     }
 
 }

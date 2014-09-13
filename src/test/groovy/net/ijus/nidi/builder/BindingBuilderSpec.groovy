@@ -71,6 +71,8 @@ public class BindingBuilderSpec extends Specification {
 		refBinding.getBoundClass() >> CreditCardProcessor
 		refBinding.getImplClass() >> BasicCCProcessor
 		refBinding.getInstance() >> new BasicCCProcessor()
+        refBinding.getScope() >> Scope.ALWAYS_CREATE_NEW
+
 		ctx.getBinding(CreditCardProcessor) >> refBinding
 		ContextBuilder ctxBuilder = GroovyMock()
 		ctxBuilder.getContextRef() >> ctx
