@@ -11,9 +11,14 @@ import org.slf4j.LoggerFactory;
 import java.sql.Time;
 
 /**
- * Created by pfried on 7/5/14.
+ * Represents a reference to another binding in the Context. Every time a Class' constructor requires another class, a new
+ * Binding must be created. Say we have a Class, 'Foo' that is bound in the main context. That's one binding. If we also have
+ * Class, 'Bar' that requires a Foo instance, then we will create a separate binding for it. Since we would normally want to
+ * respect the Scoping of the original Binding, we use a ContextBindingReference to reference the original binding.
+ *
+ * This can also be used to handle situations where a single concrete implementation is used for multiple base classes. In
+ * order to respect the Scope, a ContextBindingReference should be used. This is why there are two fields, one for referencedClass, and another for provides.
  */
-@CompileStatic
 public class ContextBindingReference<T> implements Binding<T> {
     private static final Logger log = LoggerFactory.getLogger(ContextBindingReference.class);
     /**
