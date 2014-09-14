@@ -102,7 +102,7 @@ public class BindingBuilderSpec extends Specification {
         builder.toNull()
 
         then:
-        builder.isFinalized
+        builder.finalized
         builder.getInstanceGenerator() instanceof NullGenerator
     }
 
@@ -116,7 +116,7 @@ public class BindingBuilderSpec extends Specification {
 
         then:
         builder.getInstanceGenerator() instanceof NullGenerator
-        builder.isFinalized
+        builder.finalized
     }
 
 	void "validating class assignments should throw InvalidConfigurationException when there's a problem"(){

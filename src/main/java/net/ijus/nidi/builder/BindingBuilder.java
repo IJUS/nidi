@@ -26,7 +26,9 @@ public class BindingBuilder<T> {
     /**
      * if the bindingBuilder is finalized, then no other modifications may be made to it.
      */
-    private boolean isFinalized = false;
+    private boolean finalized = false;
+
+    private boolean boundToNull = false;
 
     /**
      * always has a reference to the parent context builder
@@ -179,7 +181,7 @@ public class BindingBuilder<T> {
         }
 
         this.bindingReferenceClass = otherBaseClass;
-        this.isFinalized = true;
+        this.finalized = true;
     }
 
     /**
@@ -234,8 +236,9 @@ public class BindingBuilder<T> {
     public BindingBuilder<T> toNull(){
         checkFinalization();
         this.instanceGenerator = NullGenerator.getInstance();
+        this.boundToNull = true;
         this.scope = Scope.CONTEXT_GLOBAL;
-        this.setIsFinalized(true);
+        this.setFinalized(true);
         return this;
     }
 
@@ -562,7 +565,7 @@ public class BindingBuilder<T> {
     public Binding build() throws InvalidConfigurationException {
         log.trace("Started building Binding for " + name(this.baseClass));
         inheritScope(this.ctxBuilder.getDefaultScope());
-        this.isFinalized = true;
+        this.finalized = true;
         Binding b = null;
         if (this.bindingReferenceClass != null) {
             b = buildContextRefBinding(this.bindingReferenceClass, this.baseClass);
@@ -583,7 +586,7 @@ public class BindingBuilder<T> {
     }
 
     protected Binding buildNullBinding() {
-        return new BasicBinding(this.baseClass, null, this.instanceGenerator);
+        return new NullBinding(this.baseClass);
 
     }
 
@@ -631,26 +634,19 @@ public class BindingBuilder<T> {
     }
 
     protected void checkFinalization() throws InvalidConfigurationException {
-        if (this.isFinalized) {
+        if (this.finalized) {
             throw new InvalidConfigurationException("Attempted to modify a BindingBuilder that has already been finalized. No means no!");
         }
 
     }
 
-    public static Logger getLog() {
-        return log;
+
+    public boolean isFinalized() {
+        return finalized;
     }
 
-    public boolean getIsFinalized() {
-        return isFinalized;
-    }
-
-    public boolean isIsFinalized() {
-        return isFinalized;
-    }
-
-    public void setIsFinalized(boolean isFinalized) {
-        this.isFinalized = isFinalized;
+    public void setFinalized(boolean isFinalized) {
+        this.finalized = isFinalized;
     }
 
     public ContextBuilder getCtxBuilder() {
@@ -677,14 +673,6 @@ public class BindingBuilder<T> {
         this.scope = scope;
     }
 
-    public InstanceSetupFunction<? extends T> getInstanceConfigClosure() {
-        return instanceConfigClosure;
-    }
-
-    public void setInstanceConfigClosure(InstanceSetupFunction<? extends T> instanceConfigClosure) {
-        this.instanceConfigClosure = instanceConfigClosure;
-    }
-
     public Map<Object, BindingBuilder> getInnerBindings() {
         return innerBindings;
     }
@@ -702,7 +690,7 @@ public class BindingBuilder<T> {
     }
 
     public boolean isBoundToNull(){
-        return this.instanceGenerator != null && this.instanceGenerator instanceof NullGenerator;
+        return this.boundToNull;
     }
 
     public Class<? extends T> getImpl() {
