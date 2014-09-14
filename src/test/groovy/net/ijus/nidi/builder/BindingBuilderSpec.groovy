@@ -16,6 +16,7 @@ import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.*
 import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.NullGenerator
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
@@ -91,6 +92,32 @@ public class BindingBuilderSpec extends Specification {
 		binding.getImplClass() == BasicCCProcessor
 		binding.getInstance() instanceof BasicCCProcessor
 	}
+
+    void "binding to null should finalize the BindingBuilder"(){
+        setup:
+        ContextBuilder ctx = Mock()
+        def builder = new BindingBuilder(LoggingService, ctx)
+
+        when:
+        builder.toNull()
+
+        then:
+        builder.isFinalized
+        builder.getInstanceGenerator() instanceof NullGenerator
+    }
+
+    void "calling toObject with a null object should bind to null"(){
+        setup:
+        ContextBuilder ctx = Mock()
+        def builder = new BindingBuilder<LoggingService>(LoggingService, ctx)
+
+        when:
+        builder.toObject(null)
+
+        then:
+        builder.getInstanceGenerator() instanceof NullGenerator
+        builder.isFinalized
+    }
 
 	void "validating class assignments should throw InvalidConfigurationException when there's a problem"(){
 		when:

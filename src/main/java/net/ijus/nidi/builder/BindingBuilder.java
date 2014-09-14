@@ -8,6 +8,7 @@ import net.ijus.nidi.bindings.*;
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceSetupFunction;
+import net.ijus.nidi.instantiation.NullGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +213,10 @@ public class BindingBuilder<T> {
      * @param obj
      * @return
      */
-    public BindingBuilder<T> toObject(final T obj){
+    public BindingBuilder<T> toObject(final T obj) {
+        if (obj == null) {
+            return toNull();
+        }
         InstanceGenerator<T> gen = new InstanceGenerator<T>() {
             @Override
             public T createNewInstance() {
@@ -221,6 +225,18 @@ public class BindingBuilder<T> {
         };
         BindingBuilder<T> bb = toValue(gen);
         return bb.withScope(Scope.CONTEXT_GLOBAL);
+    }
+
+    /**
+     * Binds to null. This automatically sets the scope to CONTEXT_GLOBAL and finalizes the BindingBuilder.
+     * @return
+     */
+    public BindingBuilder<T> toNull(){
+        checkFinalization();
+        this.instanceGenerator = NullGenerator.getInstance();
+        this.scope = Scope.CONTEXT_GLOBAL;
+        this.setIsFinalized(true);
+        return this;
     }
 
     /**
@@ -523,16 +539,17 @@ public class BindingBuilder<T> {
      * makes sure nobody tried to bind to an incompatible class
      */
     public void validateClassAssignment() {
-        if (impl == null && bindingReferenceClass == null) {
-            throw new InvalidConfigurationException("The Class: " + name(baseClass) + " was declared to be bound but the implementation class is null");
+        if (!isBoundToNull()) {
+            if (impl == null && bindingReferenceClass == null) {
+                throw new InvalidConfigurationException("The Class: " + name(baseClass) + " was declared to be bound but the implementation class is null");
 
-        } else if (impl != null && !baseClass.isAssignableFrom(impl)) {
-            throw new InvalidConfigurationException("The Class: " + name(baseClass) + " was bound to " + name(impl) + " but it is not a " + baseClass.getSimpleName());
+            } else if (impl != null && !baseClass.isAssignableFrom(impl)) {
+                throw new InvalidConfigurationException("The Class: " + name(baseClass) + " was bound to " + name(impl) + " but it is not a " + baseClass.getSimpleName());
 
-        } else if (impl != null && Modifier.isAbstract(impl.getModifiers())) {
-            throw new InvalidConfigurationException("The Class " + name(baseClass) + " was bound to the abstract class: " + name(impl) + ". The implementation MUST be a concrete class");
+            } else if (impl != null && Modifier.isAbstract(impl.getModifiers())) {
+                throw new InvalidConfigurationException("The Class " + name(baseClass) + " was bound to the abstract class: " + name(impl) + ". The implementation MUST be a concrete class");
+            }
         }
-
 
     }
 
@@ -546,20 +563,28 @@ public class BindingBuilder<T> {
         log.trace("Started building Binding for " + name(this.baseClass));
         inheritScope(this.ctxBuilder.getDefaultScope());
         this.isFinalized = true;
-        Binding b;
+        Binding b = null;
         if (this.bindingReferenceClass != null) {
             b = buildContextRefBinding(this.bindingReferenceClass, this.baseClass);
 
         } else if (this.impl != null) {
             b = buildNormalBinding();
 
+        } else if (isBoundToNull()){
+            b = buildNullBinding();
+
         } else {
             //oh no! what do we do?
             throw new InvalidConfigurationException("Attempted to build the binding for " + name(this.baseClass) + " but no implementation has been specified");
         }
 
-        log.debug("Finished building Binding for " + name(this.baseClass) + ", result= " + b.toString());
+        log.debug("Finished building Binding for {}, result= {}", this.baseClass.getName(), b);
         return b;
+    }
+
+    protected Binding buildNullBinding() {
+        return new BasicBinding(this.baseClass, null, this.instanceGenerator);
+
     }
 
     /**
@@ -674,6 +699,10 @@ public class BindingBuilder<T> {
 
     public void setInstanceGenerator(InstanceGenerator instanceGenerator) {
         this.instanceGenerator = instanceGenerator;
+    }
+
+    public boolean isBoundToNull(){
+        return this.instanceGenerator != null && this.instanceGenerator instanceof NullGenerator;
     }
 
     public Class<? extends T> getImpl() {
