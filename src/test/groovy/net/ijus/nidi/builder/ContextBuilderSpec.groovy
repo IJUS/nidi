@@ -23,10 +23,29 @@ import java.awt.event.MouseAdapter
 
 public class ContextBuilderSpec extends Specification {
 
-	void "calling register and passing in an abstract class should throw an exception"(){
-		setup:
-		ContextBuilder builder = new ContextBuilder()
+    ContextBuilder builder = new ContextBuilder()
 
+    void "containsNonNullBinding should return false for NullBindings"(){
+        when:
+        builder.bind(LoggingService).toNull()
+
+        then:
+        !builder.containsNonNullBinding(LoggingService)
+
+        when:
+        builder.bindProperty("someProperty", String, null)
+
+        then:
+        !builder.containsNonNullBinding('someProperty')
+
+        when:
+        builder.bindProperty("someProperty", "realValue")
+
+        then:
+        builder.containsNonNullBinding("someProperty")
+    }
+
+	void "calling register and passing in an abstract class should throw an exception"(){
 		when: "register an interface"
 		builder.register(Map)
 
@@ -45,7 +64,6 @@ public class ContextBuilderSpec extends Specification {
 		def parentConfig = {
 			it.defaultScope = Scope.SINGLETON
 		} as ContextConfig
-		ContextBuilder builder = new ContextBuilder()
 
 		when:
 		builder.with{
@@ -62,7 +80,6 @@ public class ContextBuilderSpec extends Specification {
 		def parentConfig = {
 			it.defaultScope = Scope.SINGLETON
 		} as ContextConfig
-		ContextBuilder builder = new ContextBuilder()
 
 		when:
 		builder.inheritFrom(parentConfig)
@@ -72,9 +89,6 @@ public class ContextBuilderSpec extends Specification {
 	}
 
 	void "ContextBuilder should throw InvalidConfigurationException when attempting to inherit from an invalid class"(){
-		setup:
-		ContextBuilder builder = new ContextBuilder()
-
 		when:
 		builder.inheritFrom(current)
 

@@ -13,6 +13,7 @@ import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static net.ijus.nidi.utils.ConfigurationAssert.*;
 /**
  * Builder for creating a Context. This is the main class used for configuration.
  */
@@ -42,8 +43,40 @@ public class ContextBuilder {
 	 * @return a new BindingBuilder, ready to be configured.
 	 */
 	public <E> BindingBuilder<E> newBinding(Class<E> clazz) {
-        BindingBuilder<E> bb = BindingBuilder.create(clazz, this);
-        ctxBindings.put(clazz, bb);
+        return newBinding(null, clazz);
+    }
+
+    /**
+     * alias for newBinding(String, Class)
+     * @param name
+     * @param baseClass
+     * @param <E>
+     * @return
+     */
+    public <E> BindingBuilder<E> bind(String name, Class<E> baseClass) {
+        return newBinding(name, baseClass);
+    }
+
+    /**
+     * Creates a new BindingBuilder and registers it with the ContextBuilder. If name is not null, then the name is
+     * used to register the bindingBuilder and it can be refered to by name ONLY. If name is null, then the base class
+     * is instead used to refer to the Binding
+     *
+     * @param name the name to be used to reference the Binding.
+     * @param baseClass The base class that will be provided. required
+     * @param <E> the type of the baseClass
+     * @return a new BindingBuilder, registered with this ContextBuilder
+     */
+    public <E> BindingBuilder<E> newBinding(String name, Class<E> baseClass) {
+        if (baseClass == null) {
+            throw new InvalidConfigurationException("The base Class cannot be null when creating a new BingingBuilder");
+        }
+        BindingBuilder<E> bb = new BindingBuilder<>(baseClass, this);
+        if (name != null && name.length() > 0) {
+            ctxBindings.put(name, bb);
+        } else {
+            ctxBindings.put(baseClass, bb);
+        }
         return bb;
     }
 
@@ -56,44 +89,29 @@ public class ContextBuilder {
 	 */
 	public <E> BindingBuilder<E> register(Class<E> clazz) throws InvalidConfigurationException {
 		if (Modifier.isAbstract(clazz.getModifiers())) {
-			throw new InvalidConfigurationException("Attemted to register the abstract class: " + clazz.getName() +". Only Concrete classes can be registered in this way.");
+			throw new InvalidConfigurationException("Attempted to register the abstract class: " + clazz.getName() +". Only Concrete classes can be registered in this way.");
 		}
 		BindingBuilder<E> bb = newBinding(clazz);
 		bb.bindTo(clazz);
 		return bb;
 	}
 
+    public BindingBuilder bindProperty(final String propertyName, Object value){
+        assertNotNull(value, "Cannot bind a property to null using the 2-arg method. Instead use: <E> bindProperty(String, Class<E>, E value");
+        BindingBuilder bb = bind(propertyName, value.getClass());
+        return bb.toObject(value);
+    }
+
 	/**
 	 * Sets a property that will be bound to any Constructor parameters annotated with @Require('myProperty')
 	 *
 	 * @param propertyName the property name that matches the value of a Require
-	 * @param value the value to be bound to
+	 * @param value the value to be bound to. Can be null, in which case a NullBinding will be produced
 	 * @return the BindingBuilder, for chaining additional calls
 	 */
-	public BindingBuilder bindProperty(final String propertyName, final Object value){
-		return bindProperty(propertyName, new InstanceGenerator() {
-            @Override
-            public Object createNewInstance() {
-                return value;
-            }
-        });
-	}
-
-	public <E> BindingBuilder<E> bindProperty(String propertyName, InstanceGenerator<E> returnsValue) {
-		Class<? extends E> valueClass;
-
-		try {
-			valueClass = (Class<E>) returnsValue.createNewInstance().getClass();
-		} catch (Exception e) {
-			throw new InvalidConfigurationException("Attempted to bind the property: "+ propertyName +" to the return value of a Closure, but the closure threw: "+ e.getClass().getSimpleName() +" when it was called", e);
-		}
-
-        //TODO: sort out generics here
-        BindingBuilder bb = BindingBuilder.create(valueClass, this);
-        bb.toValue(returnsValue);
-		this.ctxBindings.put(propertyName, bb);
-		return bb;
-	}
+	public <E> BindingBuilder<E> bindProperty(final String propertyName, final Class<E> clazz, final E value) {
+        return bind(propertyName, clazz).toObject(value);
+    }
 
 	/**
 	 * Sets the default scope for this contextBuilder. All bindings will inherit this scope, unless one is
@@ -149,25 +167,9 @@ public class ContextBuilder {
 		doInheritance(parentBuilder);
 	}
 
-	/**
-	 * Consumes the parent context builder and adds it's bindings to this builder. Always preserves the bindings from this
-	 * builder if there is a conflict.
-	 * Don't call this method directly, and the parentBuilder is expected to be a throw-away created only for the purpose
-	 * of inheriting it's bindings.
-	 * @param parentBuilder
-	 */
-	private void doInheritance(ContextBuilder parentBuilder) {
-		Map<Object, BindingBuilder> parentBindings = parentBuilder.ctxBindings;
-        log.debug("Inheriting from ContextBuilder with class: {} containing {} bindings", parentBuilder.getClass().getName(), parentBindings.size());
-        parentBindings.putAll(ctxBindings); //Add this builders bindings to the parent's, overriding the parents' if there are any conflicts
-		this.ctxBindings = parentBindings;
-
-		//also inherit the default scope if needed
-		if (!defaultScopeChanged && this.defaultScope != parentBuilder.defaultScope) {
-			log.debug("Inheriting the default scope specified in the parent context builder: {}", parentBuilder.defaultScope);
-			setDefaultScope(parentBuilder.defaultScope);
-		}
-	}
+    public boolean containsNonNullBinding(Object key){
+        return containsBindingFor(key) && !ctxBindings.get(key).isBoundToNull();
+    }
 
 	public boolean containsBindingFor(Object key) {
 		return ctxBindings.containsKey(key);
@@ -199,4 +201,26 @@ public class ContextBuilder {
     public Map<Object, BindingBuilder> getCtxBindings() {
         return ctxBindings;
     }
+
+
+    /**
+     * Consumes the parent context builder and adds it's bindings to this builder. Always preserves the bindings from this
+     * builder if there is a conflict.
+     * Don't call this method directly, and the parentBuilder is expected to be a throw-away created only for the purpose
+     * of inheriting it's bindings.
+     * @param parentBuilder
+     */
+    private void doInheritance(ContextBuilder parentBuilder) {
+        Map<Object, BindingBuilder> parentBindings = parentBuilder.ctxBindings;
+        log.debug("Inheriting from ContextBuilder with class: {} containing {} bindings", parentBuilder.getClass().getName(), parentBindings.size());
+        parentBindings.putAll(ctxBindings); //Add this builders bindings to the parent's, overriding the parents' if there are any conflicts
+        this.ctxBindings = parentBindings;
+
+        //also inherit the default scope if needed
+        if (!defaultScopeChanged && this.defaultScope != parentBuilder.defaultScope) {
+            log.debug("Inheriting the default scope specified in the parent context builder: {}", parentBuilder.defaultScope);
+            setDefaultScope(parentBuilder.defaultScope);
+        }
+    }
+
 }

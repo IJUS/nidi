@@ -152,20 +152,6 @@ public class BindingBuilderSpec extends Specification {
 		thrown(InvalidConfigurationException)
 	}
 
-	void "constructor params with the @Bound annotation should be correctly identified"(){
-		setup:
-		def builder = new BindingBuilder(LoggingService, null)
-		Constructor constructor = NamespacedLoggingService.getConstructor(String)
-
-		when:
-		String[] result = builder.getBoundAnnotatedParams(constructor)
-
-		then:
-		result.length == 1
-		result[0] == 'stringProperty'
-
-	}
-
 	void "binding to a value of an incompatible class should throw an exception"(){
 		setup:
 		def builder = new BindingBuilder(Map, null)

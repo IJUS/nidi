@@ -1,14 +1,12 @@
 package net.ijus.nidi.builder;
 
-import net.ijus.nidi.Context;
-import net.ijus.nidi.Inject;
-import net.ijus.nidi.InvalidConfigurationException;
-import net.ijus.nidi.Require;
+import net.ijus.nidi.*;
 import net.ijus.nidi.bindings.*;
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceGenerator;
 import net.ijus.nidi.instantiation.InstanceSetupFunction;
 import net.ijus.nidi.instantiation.NullGenerator;
+import net.ijus.nidi.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +14,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.*;
+
+import static net.ijus.nidi.utils.ReflectionUtils.*;
 
 /**
  * Created by pfried on 7/2/14.
@@ -271,7 +271,7 @@ public class BindingBuilder<T> {
 		 * we have no other way of knowing the class
 		 */
         Constructor constructor = resolveConstructor(this.impl);
-        String[] paramAnnots = getBoundAnnotatedParams(constructor);
+        String[] paramAnnots = getBoundAnnotatedParams(constructor.getParameterAnnotations());
         Class paramClass = null;
         for (int i = 0; i < paramAnnots.length; i++) {
             if (paramAnnots[i] != null && paramAnnots[i].equals(param)) {
@@ -344,38 +344,6 @@ public class BindingBuilder<T> {
 
     }
 
-    /**
-     * returns an array of string values for all the constructor params annotated with @Bound
-     * The array will always be the same length as the number of constructor params.
-     * For the example constructor:
-     * <code>MyClass(LoggingService logSvc, @Bound("stringProperty") String someString){...</code>
-     * the Array returned would look like: [null, 'stringProperty'] since the first param doesn't
-     * have the @Bound annotation
-     *
-     * @param constructor The constructor to get the annotation values of.
-     * @return String[] of length equal to the number of constructor params, or a String[0] for a
-     * zero-arg constructor
-     */
-    protected String[] getBoundAnnotatedParams(Constructor constructor) {
-        Annotation[][] allAnnotations = constructor.getParameterAnnotations();
-
-        String[] boundParams = new String[allAnnotations.length];
-
-        for (int outer = 0; outer < allAnnotations.length; outer++) {
-            Annotation[] paramAnnotations = allAnnotations[outer];
-            for (int inner = 0; inner < paramAnnotations.length; inner++) {
-                Annotation a = paramAnnotations[inner];
-                if (a instanceof Require) {
-                    boundParams[outer] = ((Require) a).value();
-                }
-
-            }
-
-        }
-
-
-        return boundParams;
-    }
 
     /**
      * returns a Binding[] containing a binding for each constructor parameter.
@@ -391,8 +359,8 @@ public class BindingBuilder<T> {
 
 
         Binding[] paramBindings = new Binding[constructorParams.length];
-
-        String[] boundAnnotationValues = getBoundAnnotatedParams(constructor);
+        Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
+        String[] boundAnnotationValues = getBoundAnnotatedParams(parameterAnnotations);
 
 
         for (int paramIdx = 0; paramIdx < constructorParams.length; paramIdx++) {
@@ -400,7 +368,7 @@ public class BindingBuilder<T> {
             final Class paramType = constructorParams[paramIdx];
 
             if (boundAnnotationValues[paramIdx] != null) {
-                //This Constructor parameter has a @Require annotation
+                //This Constructor parameter has a @Require or @Optional annotation with a String value
                 String paramName = boundAnnotationValues[paramIdx];
 
                 paramBindings[paramIdx] = buildPropertyBinding(paramName);
@@ -413,6 +381,9 @@ public class BindingBuilder<T> {
                 //This constructor param is not annotated and is not overridden in the innerBindings
                 //This means we have to look in the context for the correct binding
                 paramBindings[paramIdx] = buildContextRefBinding(paramType);
+
+            } else if (ReflectionUtils.isParameterOptional(parameterAnnotations, paramIdx)) {
+                paramBindings[paramIdx] = new NullBinding(paramType);
 
             } else {
                 //Oh no!
