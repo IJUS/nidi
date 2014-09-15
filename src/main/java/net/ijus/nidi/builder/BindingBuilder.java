@@ -377,7 +377,7 @@ public class BindingBuilder<T> {
                 //Binding for this constructor param has been overridden
                 paramBindings[paramIdx] = buildNormalInnerBinding(paramType);
 
-            } else if (ctxBuilder.containsBindingFor(paramType)) {
+            } else if (ctxBuilder.containsNonNullBinding(paramType)) {
                 //This constructor param is not annotated and is not overridden in the innerBindings
                 //This means we have to look in the context for the correct binding
                 paramBindings[paramIdx] = buildContextRefBinding(paramType);

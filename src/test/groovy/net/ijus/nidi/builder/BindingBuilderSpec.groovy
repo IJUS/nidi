@@ -227,6 +227,7 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
 		ContextBuilder ctxBuilder = Mock()
 		ctxBuilder.containsBindingFor(_ as Class) >> true
+        ctxBuilder.containsNonNullBinding(_ as Class) >> true
 		ctxBuilder.getContextRef() >> Mock(Context)
 		basicTestBuilder.ctxBuilder = ctxBuilder
 		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)

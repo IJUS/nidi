@@ -186,21 +186,4 @@ public class ContextBuilderIntegrationTest extends Specification {
 		b.implClass == BasicCCProcessor
 	}
 
-    void "null bindings should resolve properly"(){
-        setup:
-        ContextBuilder ctxBuilder = new ContextBuilder()
-        ctxBuilder.bind(FraudDetectionService).to(ComplexFraudDetector)
-        ctxBuilder.bindProperty("fraudDetURL", "www.test.com")
-        ctxBuilder.bind(LoggingService).toNull()
-
-        when:
-        Context ctx = ctxBuilder.build()
-
-        then:
-        FraudDetectionService svc = ctx.getInstance(FraudDetectionService)
-        svc instanceof ComplexFraudDetector
-        ((ComplexFraudDetector)svc).loggingService == null
-
-    }
-
 }
