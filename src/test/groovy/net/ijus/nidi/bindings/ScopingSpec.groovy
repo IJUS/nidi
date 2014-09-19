@@ -89,11 +89,11 @@ class ScopingSpec extends Specification {
 	void "Context global scope should result in one instace per context"() {
 		setup:
 		Context ctx1 = Configuration.configureNew({
-			it.bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
+			it.bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor)
 		} as ContextConfig)
 
 		Context ctx2 = Configuration.configureNew({
-			it.bind(CreditCardProcessor).withScope(Scope.CONTEXT_GLOBAL).to(BasicCCProcessor)
+			it.bind(CreditCardProcessor).withScope(Scope.SINGLETON).to(BasicCCProcessor)
 		} as ContextConfig)
 
 		when:

@@ -19,7 +19,7 @@ class BindingBuilderIntegrationTest extends Specification {
         setup:
         ContextBuilder ctxBuilder = Mock()
         ctxBuilder.containsBindingFor(LoggingService) >> false
-        BindingBuilder<CreditCardProcessor> bb = new BindingBuilder<>(CreditCardProcessor, ctxBuilder).withScope(Scope.CONTEXT_GLOBAL)
+        BindingBuilder<CreditCardProcessor> bb = new BindingBuilder<>(CreditCardProcessor, ctxBuilder).withScope(Scope.SINGLETON)
 
         when:
         bb.bindTo(WithOptionalClass)

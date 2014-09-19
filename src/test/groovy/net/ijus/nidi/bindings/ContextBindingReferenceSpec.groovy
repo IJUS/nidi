@@ -37,7 +37,7 @@ public class ContextBindingReferenceSpec extends Specification {
         Binding binding = Mock()
         binding.getBoundClass() >> CreditCardProcessor
         binding.getImplClass() >> ComplexCCProcessor
-        binding.getScope() >> Scope.CONTEXT_GLOBAL
+        binding.getScope() >> Scope.SINGLETON
 
         Context ctx = Mock()
         ctx.getBinding(CreditCardProcessor) >> binding

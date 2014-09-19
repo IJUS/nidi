@@ -226,18 +226,18 @@ public class BindingBuilder<T> {
             }
         };
         BindingBuilder<T> bb = toValue(gen);
-        return bb.withScope(Scope.CONTEXT_GLOBAL);
+        return bb.withScope(Scope.SINGLETON);
     }
 
     /**
-     * Binds to null. This automatically sets the scope to CONTEXT_GLOBAL and finalizes the BindingBuilder.
+     * Binds to null. This automatically sets the scope to SINGLETON and finalizes the BindingBuilder.
      * @return
      */
     public BindingBuilder<T> toNull(){
         checkFinalization();
         this.instanceGenerator = NullGenerator.getInstance();
         this.boundToNull = true;
-        this.scope = Scope.CONTEXT_GLOBAL;
+        this.scope = Scope.SINGLETON;
         this.setFinalized(true);
         return this;
     }

@@ -120,14 +120,14 @@ public class ContextBuilderIntegrationTest extends Specification {
 	void "Bindings should be created with the correct scope when one is specified"() {
 		setup:
 		ContextBuilder builder = new ContextBuilder()
-		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.CONTEXT_GLOBAL)
+		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.SINGLETON)
 
 		when:
 		Context ctx = builder.build()
 		net.ijus.nidi.bindings.Binding b = ctx.getBinding(LoggingService)
 
 		then:
-		b.getScope() == Scope.CONTEXT_GLOBAL
+		b.getScope() == Scope.SINGLETON
 
 		when:
 		def serv1 = ctx.getInstance(LoggingService)

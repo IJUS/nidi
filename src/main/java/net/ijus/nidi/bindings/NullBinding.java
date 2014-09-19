@@ -31,7 +31,7 @@ public class NullBinding<T> implements Binding<T> {
 
     @Override
     public Scope getScope() {
-        return Scope.CONTEXT_GLOBAL;
+        return Scope.SINGLETON;
     }
 
     @Override
