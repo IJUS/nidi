@@ -6,63 +6,79 @@ import net.ijus.nidi.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 
 /**
- * Created by pfried on 7/5/14.
+ * An instance generator that creates instances of the given class, using an optional array of Bindings to provide the
+ * constructor parameters. An optional InstanceSetupFunction can also be provided. If it is, then this function will be
+ * called every time a new instance is generated.
  */
 public class ConstructorInstanceGenerator<T> implements InstanceGenerator<T> {
     private static final Logger log = LoggerFactory.getLogger(ConstructorInstanceGenerator.class);
 
     Binding[] constructorArgs;
-    Class<? extends T> clazz;
+    Class<T> clazz;
     InstanceSetupFunction<T> setup;
-    Constructor<? extends T> resolvedConstructor;
+    MethodHandle constructorHandle;
 
-    public ConstructorInstanceGenerator(Class<? extends T> clazz, Binding[] constructorArgs, InstanceSetupFunction<T> setup) {
+    public ConstructorInstanceGenerator(Class<T> clazz, Binding[] constructorArgs, InstanceSetupFunction<T> setup) throws InvalidConfigurationException {
         this.clazz = clazz;
         this.constructorArgs = (constructorArgs != null)? constructorArgs: new Binding[0];
         this.setup = setup;
-        this.resolvedConstructor = resolveConstructor();
+        this.constructorHandle = createConstructorHandle();
     }
 
-    public ConstructorInstanceGenerator(Class<? extends T> clazz, Binding[] constructorArgs) {
+    public ConstructorInstanceGenerator(Class<T> clazz, Binding[] constructorArgs) {
         this(clazz, constructorArgs, null);
     }
 
-    public ConstructorInstanceGenerator(Class<? extends T> clazz) {
+    public ConstructorInstanceGenerator(Class<T> clazz) {
         this(clazz, null, null);
     }
 
-    public ConstructorInstanceGenerator(Class<? extends T> clazz, InstanceSetupFunction<T> setup) {
+    public ConstructorInstanceGenerator(Class<T> clazz, InstanceSetupFunction<T> setup) {
         this(clazz, null, setup);
     }
 
-    protected Constructor<? extends T> resolveConstructor(){
-        Class[] args;
-        if (constructorArgs != null && constructorArgs.length > 0) {
-            args = new Class[constructorArgs.length];
-            for (int i = 0; i < constructorArgs.length; i++) {
-                args[i] = constructorArgs[i].getBoundClass();
-            }
-
-        } else {
-            args = new Class[0];
-        }
-
+    /**
+     * Creates the MethodHandle that will be used to create new instances.
+     *
+     * @return
+     * @throws net.ijus.nidi.InvalidConfigurationException if the Constructor cannot be resolved
+     */
+    protected MethodHandle createConstructorHandle() throws InvalidConfigurationException {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
         try {
-            Constructor<? extends T> resolved = this.clazz.getConstructor(args);
+            Class[] args;
+            if (constructorArgs != null && constructorArgs.length > 0) {
+                args = new Class[constructorArgs.length];
+                for (int i = 0; i < constructorArgs.length; i++) {
+                    args[i] = constructorArgs[i].getBoundClass();
+                }
 
+            } else {
+                args = new Class[0];
+            }
             /*
-            Even though nidi only uses public constructors, setting it accessible causes java to skip
-            the access checks altogether. This improves performance, especially if we're going to be generating a lot
-            of instances.
+            We lookup the Constructor using the standard Reflection api since we already have a reference to the
+            Class we want to instantiate, and we only need to do the lookup once so speed isn't as critical.
+            When we actually create the instance, we want to use a MethodHandle, though.
              */
-            resolved.setAccessible(true);
-            return resolved;
+            Constructor<T> resolvedConstructor = clazz.getConstructor(args);
 
-        } catch (NoSuchMethodException e){
-            throw new InvalidConfigurationException("The Class " + clazz.getName() + " does not have an accessible constructor for arguments: " + ClassUtils.classNames(args));
+            //Nidi only uses public constructors, but setting accessible will skip access checks.
+            // this can help speed things up
+            resolvedConstructor.setAccessible(true);
+            return lookup.unreflectConstructor(resolvedConstructor);
+
+        } catch (IllegalAccessException | NoSuchMethodException e) {
+            //Throw an unchecked exception here, because this should never happen
+            throw new InvalidConfigurationException("Could not create MethodHandle for Constructor" + clazz.getSimpleName(), e);
+        } catch (SecurityException e) {
+            throw new InvalidConfigurationException("Got a security exception when resolving constructor for " + clazz.getSimpleName(), e);
         }
     }
 
@@ -76,8 +92,15 @@ public class ConstructorInstanceGenerator<T> implements InstanceGenerator<T> {
 
         T instance;
         try {
-            instance = resolvedConstructor.newInstance(args);
-        } catch (Exception e) {
+            Object uncast;
+            if (args.length > 0) {
+                uncast = constructorHandle.invokeWithArguments(args);
+            } else {
+                uncast = constructorHandle.invoke();
+            }
+            instance = clazz.cast(uncast);
+
+        } catch (Throwable e) { //yeah, methodHandles are a little scary
             String msg = "Error creating a new instance of: " + clazz.getName();
             log.error(msg, e);
             throw new CreationException(msg, e);
@@ -99,11 +122,11 @@ public class ConstructorInstanceGenerator<T> implements InstanceGenerator<T> {
         this.constructorArgs = constructorArgs;
     }
 
-    public Class<? extends T> getClazz() {
+    public Class<T> getClazz() {
         return clazz;
     }
 
-    public void setClazz(Class<? extends T> clazz) {
+    public void setClazz(Class<T> clazz) {
         this.clazz = clazz;
     }
 
