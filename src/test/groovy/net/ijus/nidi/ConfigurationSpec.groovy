@@ -31,10 +31,10 @@ public class ConfigurationSpec extends Specification {
 
 	void "configurations should inherit from one another"() {
 		when:
-		Context ctx = configureNew{
-			inheritFrom(ExampleConfigScript.getName())
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-		}
+		Context ctx = configureNew({
+			it.inheritFrom(ExampleConfigScript.getName())
+			it.bind(CreditCardProcessor).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		then:
 		def ccProc = ctx.getInstance(CreditCardProcessor)
@@ -60,11 +60,11 @@ public class ConfigurationSpec extends Specification {
 
 	void "Binding references should provide the same implementation and scope as the referenced binding"(){
 		given: "create a context with two singleton bindings"
-		Context ctx = configureNew {
-			defaultScope = Scope.SINGLETON
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-			bind(RefundProcessor).reference(CreditCardProcessor)
-		}
+		Context ctx = configureNew({
+			it.defaultScope = Scope.SINGLETON
+			it.bind(CreditCardProcessor).to(BasicCCProcessor)
+			it.bind(RefundProcessor).reference(CreditCardProcessor)
+		} as ContextConfig)
 
 		when:
 		def inst1 = ctx.getInstance(CreditCardProcessor)
@@ -106,33 +106,15 @@ public class ConfigurationSpec extends Specification {
 
 	def "a properly configured context should provide a basic implementation of an interface"(){
 		setup:
-		Context ctx = configureNew {
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-		}
+		Context ctx = configureNew({
+			it.bind(CreditCardProcessor).to(BasicCCProcessor)
+		} as ContextConfig)
 
 		when:
 		def instance = ctx.getInstance(CreditCardProcessor)
 
 		then:
 		instance instanceof BasicCCProcessor
-	}
-
-	def "configuration should work with closures"() {
-		setup:
-		ContextBuilder builder = new ContextBuilder()
-
-		when: "bind basic class with a closure"
-		configure(builder){
-			bind(CreditCardProcessor).to(BasicCCProcessor)
-		}
-
-		then:
-		notThrown(InvalidConfigurationException)
-		builder.ctxBindings.size() == 1
-		BindingBuilder bb = builder.ctxBindings.get(CreditCardProcessor)
-		bb != null
-		bb.impl == BasicCCProcessor
-
 	}
 
 	void "attempting to configure a context using a class that doesn't exist should throw an error"() {

@@ -2,8 +2,6 @@ package net.ijus.nidi.bindings
 
 import com.example.impl.BasicCCProcessor
 import com.example.interfaces.CreditCardProcessor
-import net.ijus.nidi.bindings.CacheingBinding
-import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.instantiation.ConstructorInstanceGenerator
 import spock.lang.Specification
 
@@ -16,7 +14,7 @@ public class CacheingBindingSpec extends Specification {
 	void "caching binding should always return the same instance of it's implementation"(){
 		setup:
 		ConstructorInstanceGenerator generator = GroovyMock(ConstructorInstanceGenerator)
-		CacheingBinding binding = new CacheingBinding(generator, CreditCardProcessor, BasicCCProcessor, Scope.SINGLETON)
+		CachingBinding binding = new CachingBinding(generator, CreditCardProcessor, BasicCCProcessor, Scope.SINGLETON)
 
 		when:
 		def result1 = binding.getInstance()

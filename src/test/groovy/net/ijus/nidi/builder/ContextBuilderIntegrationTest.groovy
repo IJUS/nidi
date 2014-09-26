@@ -1,20 +1,18 @@
 package net.ijus.nidi.builder
 
 import com.example.config.ComplexConfigScript
-import com.example.impl.BasicCCProcessor
-import com.example.impl.ComplexCCProcessor
-import com.example.impl.ConcreteClassNoInterface
-import com.example.impl.FraudDetectorImpl
-import com.example.impl.LoggingServiceImpl
-import com.example.impl.NamespacedLoggingService
+import com.example.impl.*
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
 import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Configuration
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
+import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 import spock.lang.Specification
 
 /**
@@ -81,9 +79,9 @@ public class ContextBuilderIntegrationTest extends Specification {
 
 		when:
 		builder.bind(LoggingService).to(LoggingServiceImpl)
-		builder.register(ConcreteClassNoInterface).setupInstance {
+		builder.register(ConcreteClassNoInterface).setupInstance({
 			it.stringProperty = "custom value"
-		}
+		} as InstanceSetupFunction)
 		Context ctx = builder.build()
 
 		then:
@@ -95,11 +93,9 @@ public class ContextBuilderIntegrationTest extends Specification {
 
 	void "Bindings should allow for specifying constructor params"(){
 		setup:
-		Context ctx = Configuration.configureNew{
-			bind(LoggingService).to(NamespacedLoggingService){
-				bindConstructorParam('stringProperty').toValue{ 'testString' }
-			}
-		}
+		Context ctx = Configuration.configureNew({
+			it.bind(LoggingService).to(NamespacedLoggingService).bindConstructorParam('stringProperty').toValue({ 'testString' } as InstanceGenerator)
+		} as ContextConfig)
 
 		expect:
 		def instance = ctx.getInstance(LoggingService)
@@ -124,14 +120,14 @@ public class ContextBuilderIntegrationTest extends Specification {
 	void "Bindings should be created with the correct scope when one is specified"() {
 		setup:
 		ContextBuilder builder = new ContextBuilder()
-		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.CONTEXT_GLOBAL)
+		builder.bind(LoggingService).to(LoggingServiceImpl).withScope(Scope.SINGLETON)
 
 		when:
 		Context ctx = builder.build()
 		net.ijus.nidi.bindings.Binding b = ctx.getBinding(LoggingService)
 
 		then:
-		b.getScope() == Scope.CONTEXT_GLOBAL
+		b.getScope() == Scope.SINGLETON
 
 		when:
 		def serv1 = ctx.getInstance(LoggingService)

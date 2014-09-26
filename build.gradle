@@ -23,7 +23,7 @@ dependencies {
 	testCompile 'cglib:cglib:2.2.2'
 	testCompile 'org.objenesis:objenesis:1.4'
 
-	compile 'org.slf4j:slf4j-simple:1.7.5'
+	testCompile 'org.slf4j:slf4j-simple:1.7.5'
 
 }
 
