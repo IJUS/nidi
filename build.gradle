@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'groovy'
+//apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
@@ -17,7 +17,7 @@ repositories {
 dependencies {
 
 	compile 'org.slf4j:slf4j-api:1.7.5'
-	compile 'org.codehaus.groovy:groovy-all:2.0.5'
+	testCompile 'org.codehaus.groovy:groovy-all:2.0.5'
     testCompile group: 'junit', name: 'junit', version: '4.11'
 	testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 	testCompile 'cglib:cglib:2.2.2'
@@ -33,16 +33,10 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn: groovydoc) {
-	classifier = 'javadoc'
-	from groovydoc.destinationDir
-}
 
 install.dependsOn sourcesJar
-install.dependsOn javadocJar
 
 artifacts {
 	archives sourcesJar
-	archives javadocJar
 }
 
