@@ -3,8 +3,8 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
-sourceCompatibility = 1.6
-version = '0.2'
+sourceCompatibility = 1.7
+version = '0.3'
 
 group = "net.ijus"
 
