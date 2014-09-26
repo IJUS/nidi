@@ -10,6 +10,7 @@ import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
 import net.ijus.nidi.Context
+import net.ijus.nidi.ContextConfig
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.Scope
 import spock.lang.Specification
@@ -22,10 +23,29 @@ import java.awt.event.MouseAdapter
 
 public class ContextBuilderSpec extends Specification {
 
-	void "calling register and passing in an abstract class should throw an exception"(){
-		setup:
-		ContextBuilder builder = new ContextBuilder()
+    ContextBuilder builder = new ContextBuilder()
 
+    void "containsNonNullBinding should return false for NullBindings"(){
+        when:
+        builder.bind(LoggingService).toNull()
+
+        then:
+        !builder.containsNonNullBinding(LoggingService)
+
+        when:
+        builder.bindProperty("someProperty", String, null)
+
+        then:
+        !builder.containsNonNullBinding('someProperty')
+
+        when:
+        builder.bindProperty("someProperty", "realValue")
+
+        then:
+        builder.containsNonNullBinding("someProperty")
+    }
+
+	void "calling register and passing in an abstract class should throw an exception"(){
 		when: "register an interface"
 		builder.register(Map)
 
@@ -42,9 +62,8 @@ public class ContextBuilderSpec extends Specification {
 	void "inheriting from a parent should not override the default scope if it has been specified"(){
 		setup:
 		def parentConfig = {
-			defaultScope = Scope.SINGLETON
-		}
-		ContextBuilder builder = new ContextBuilder()
+			it.defaultScope = Scope.SINGLETON
+		} as ContextConfig
 
 		when:
 		builder.with{
@@ -59,9 +78,8 @@ public class ContextBuilderSpec extends Specification {
 	void "inheriting from a parent should set the default scope if it has not been specified"(){
 		setup:
 		def parentConfig = {
-			defaultScope = Scope.SINGLETON
-		}
-		ContextBuilder builder = new ContextBuilder()
+			it.defaultScope = Scope.SINGLETON
+		} as ContextConfig
 
 		when:
 		builder.inheritFrom(parentConfig)
@@ -71,9 +89,6 @@ public class ContextBuilderSpec extends Specification {
 	}
 
 	void "ContextBuilder should throw InvalidConfigurationException when attempting to inherit from an invalid class"(){
-		setup:
-		ContextBuilder builder = new ContextBuilder()
-
 		when:
 		builder.inheritFrom(current)
 

@@ -15,6 +15,8 @@ import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.Context
 import net.ijus.nidi.InvalidConfigurationException
 import net.ijus.nidi.bindings.*
+import net.ijus.nidi.instantiation.InstanceGenerator
+import net.ijus.nidi.instantiation.NullGenerator
 import spock.lang.Specification
 
 import java.lang.reflect.Constructor
@@ -32,11 +34,9 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
 
 		when:
-		builder.to(ComplexCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
-			bindConstructorParam(FraudDetectionService).to(FraudDetectorImpl)
-		}
+		builder.bindTo(ComplexCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW)
+        builder.bindConstructorParam(LoggingService).to(LoggingServiceImpl)
+        builder.bindConstructorParam(FraudDetectionService).to(FraudDetectorImpl)
 		Binding result = builder.build()
 
 		then:
@@ -52,20 +52,14 @@ public class BindingBuilderSpec extends Specification {
 
 		when:
 		BindingBuilder builder = new BindingBuilder(CreditCardProcessor, ctxBuilder)
-		builder.to(BasicCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam(LoggingService).to(LoggingServiceImpl)
-		}
+		builder.bindTo(BasicCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW).bindConstructorParam(LoggingService).to(LoggingServiceImpl)
 
 		then:
 		thrown(InvalidConfigurationException)
 
 		when:
 		BindingBuilder b2 = new BindingBuilder(CreditCardProcessor, ctxBuilder)
-		b2.to(BasicCCProcessor){
-			scope = Scope.ALWAYS_CREATE_NEW
-			bindConstructorParam("nonExistantProp").toValue {"stringy"}
-		}
+		b2.to(BasicCCProcessor).withScope(Scope.ALWAYS_CREATE_NEW).bindConstructorParam("nonExistantProp").toValue({"stringy"} as InstanceGenerator)
 
 		then:
 		thrown(InvalidConfigurationException)
@@ -78,6 +72,8 @@ public class BindingBuilderSpec extends Specification {
 		refBinding.getBoundClass() >> CreditCardProcessor
 		refBinding.getImplClass() >> BasicCCProcessor
 		refBinding.getInstance() >> new BasicCCProcessor()
+        refBinding.getScope() >> Scope.ALWAYS_CREATE_NEW
+
 		ctx.getBinding(CreditCardProcessor) >> refBinding
 		ContextBuilder ctxBuilder = GroovyMock()
 		ctxBuilder.getContextRef() >> ctx
@@ -96,6 +92,32 @@ public class BindingBuilderSpec extends Specification {
 		binding.getImplClass() == BasicCCProcessor
 		binding.getInstance() instanceof BasicCCProcessor
 	}
+
+    void "binding to null should finalize the BindingBuilder"(){
+        setup:
+        ContextBuilder ctx = Mock()
+        def builder = new BindingBuilder(LoggingService, ctx)
+
+        when:
+        builder.toNull()
+
+        then:
+        builder.finalized
+        builder.getInstanceGenerator() instanceof NullGenerator
+    }
+
+    void "calling toObject with a null object should bind to null"(){
+        setup:
+        ContextBuilder ctx = Mock()
+        def builder = new BindingBuilder<LoggingService>(LoggingService, ctx)
+
+        when:
+        builder.toObject(null)
+
+        then:
+        builder.getInstanceGenerator() instanceof NullGenerator
+        builder.finalized
+    }
 
 	void "validating class assignments should throw InvalidConfigurationException when there's a problem"(){
 		when:
@@ -130,26 +152,12 @@ public class BindingBuilderSpec extends Specification {
 		thrown(InvalidConfigurationException)
 	}
 
-	void "constructor params with the @Bound annotation should be correctly identified"(){
-		setup:
-		def builder = new BindingBuilder(LoggingService, null)
-		Constructor constructor = NamespacedLoggingService.getConstructor(String)
-
-		when:
-		String[] result = builder.getBoundAnnotatedParams(constructor)
-
-		then:
-		result.length == 1
-		result[0] == 'stringProperty'
-
-	}
-
 	void "binding to a value of an incompatible class should throw an exception"(){
 		setup:
 		def builder = new BindingBuilder(Map, null)
 
 		when:
-		builder.toValue {['listItemOne', 'two', 'three']}
+		builder.toValue({['listItemOne', 'two', 'three']} as InstanceGenerator)
 
 		then:
 		thrown(InvalidConfigurationException)
@@ -160,7 +168,7 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder builder = new BindingBuilder(String, null)
 
 		when:
-		builder.toValue { "testValue" }
+		builder.toValue({ "testValue" } as InstanceGenerator)
 
 		then:
 		builder.instanceGenerator != null
@@ -219,6 +227,7 @@ public class BindingBuilderSpec extends Specification {
 		BindingBuilder basicTestBuilder = new BindingBuilder(MultipleAnnotatedConstructors, null)
 		ContextBuilder ctxBuilder = Mock()
 		ctxBuilder.containsBindingFor(_ as Class) >> true
+        ctxBuilder.containsNonNullBinding(_ as Class) >> true
 		ctxBuilder.getContextRef() >> Mock(Context)
 		basicTestBuilder.ctxBuilder = ctxBuilder
 		Constructor constructor = ComplexCCProcessor.getConstructor(FraudDetectionService, LoggingService)

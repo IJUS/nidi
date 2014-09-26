@@ -10,6 +10,7 @@ import com.example.interfaces.RefundProcessor
 import net.ijus.nidi.bindings.Scope
 import net.ijus.nidi.builder.ContextBuilder
 import net.ijus.nidi.ContextConfig
+import net.ijus.nidi.instantiation.InstanceSetupFunction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +30,9 @@ public class ExampleConfigScript implements ContextConfig {
 		//tells it to use the binding for CreditCardProcessor also as the RefundProcessor (will check to make sure the impl implements both
 		ctx.bind(RefundProcessor).reference(CreditCardProcessor)
 		//Binds the interface to the implementation and additionally sets up an instance property that isn't specified in the constructor
-		ctx.bind(FraudDetectionService).to(FraudDetectorImpl).setupInstance {FraudDetectorImpl instance->
+		ctx.bind(FraudDetectionService).to(FraudDetectorImpl).setupInstance({FraudDetectorImpl instance->
 			instance.setWhoYaGonnCall("911")
-		}
+		} as InstanceSetupFunction)
 
 		ctx.bind(LoggingService).to(LoggingServiceImpl)
 
