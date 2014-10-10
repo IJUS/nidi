@@ -61,3 +61,11 @@ artifacts {
 	archives sourcesJar
 }
 
+uploadArchives {
+	repositories.mavenDeployer {
+		repository(url: m2Settings.exposed) {
+			authentication(userName: m2Settings.username, password: m2Settings.password)
+		}
+	}
+}
+
