@@ -12,15 +12,19 @@ public class Context {
     private Map<Object, Binding> bindingsMap = new LinkedHashMap<Object, Binding>();
 
 
-    public Binding getBinding(Object key) {
-        return bindingsMap.get(key);
+    public <T> Binding<T> getBinding(Class<T> key) {
+        return (Binding<T>) bindingsMap.get(key);
     }
+
+	public Binding getBinding(String key) {
+		return bindingsMap.get(key);
+	}
 
     public boolean containsBinding(Object key) {
         return bindingsMap.containsKey(key);
     }
 
-    public Object getInstance(final Class clazz) {
+    public <T> T getInstance(final Class<T> clazz) {
         if (!containsBinding(clazz)) {
             throw new InvalidConfigurationException("The Class: " + clazz.getCanonicalName() + " was requested from a Context, but no Binding exists for it");
         }
