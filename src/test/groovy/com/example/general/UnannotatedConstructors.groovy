@@ -1,4 +1,7 @@
-package com.example.general;
+package com.example.general
+
+import net.ijus.nidi.Optional
+import net.ijus.nidi.Require;
 
 
 /**
@@ -10,11 +13,11 @@ public class UnannotatedConstructors {
 	String one
 	String two
 
-	UnannotatedConstructors(String one) {
+	UnannotatedConstructors(@Require("requiredString") String one) {
 		this(one, "default")
 	}
 
-	UnannotatedConstructors(String one, String two) {
+	UnannotatedConstructors(@Require("requiredString") String one, @Optional("optionalString") String two) {
 		this.one = one
 		this.two = two
 	}
