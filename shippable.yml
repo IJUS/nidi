@@ -1,0 +1,16 @@
+
+language: java
+jdk:
+  - oraclejdk7
+  - openjdk7
+
+install: ./gradlew assemble
+
+before_script:
+  - mkdir -p shippable/testresults
+
+script:
+  - ./gradlew check
+
+after_script:
+  - cp -r build/test-results/ shippable/testresults/
