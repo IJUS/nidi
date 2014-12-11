@@ -22,8 +22,10 @@ try {
 			snapshots: m2Repos.snapshotsLocation.text(),
 			releases: m2Repos.releasesLocation.text()
 	]
+	project.ext.m2SettingsAvailable = true
 } catch (ex) {
-	println(ex.message)
+	println("M2 Settings could not be setup: " + ex.message)
+	project.ext.m2SettingsAvailable = false
 }
 
 repositories {
@@ -58,10 +60,12 @@ artifacts {
 	archives sourcesJar
 }
 
-uploadArchives {
-	repositories.mavenDeployer {
-		repository(url: m2Settings.exposed) {
-			authentication(userName: m2Settings.username, password: m2Settings.password)
+if (project.ext.m2SettingsAvailable) {
+	uploadArchives {
+		repositories.mavenDeployer {
+			repository(url: m2Settings.exposed) {
+				authentication(userName: m2Settings.username, password: m2Settings.password)
+			}
 		}
 	}
 }
