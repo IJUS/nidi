@@ -29,13 +29,6 @@ try {
 repositories {
 	mavenLocal()
     mavenCentral()
-	maven {
-		credentials {
-			username m2Settings.username
-			password m2Settings.password
-		}
-		url m2Settings.repo
-	}
 }
 
 dependencies {
