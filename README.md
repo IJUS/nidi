@@ -1,5 +1,7 @@
 NiDI
 =================
+
+[![Build Status](https://api.shippable.com/projects/5488a26ad46935d5fbbfdab4/badge?branchName=master)](https://app.shippable.com/projects/5488a26ad46935d5fbbfdab4/builds/latest)
 ### Non-invasive Dependency Injection ###
 
 NiDI (needy, get it?) is a simple dependency injection library for Java applications. NiDI provides an application Context that takes care of instantiating all Class dependencies for you. Configuration is done entirely in code and is very easy to setup and test, while still maintaining a very high level of flexibility. There is no xml and error messages try to be as helpful as possible.

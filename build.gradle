@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'idea'
+apply plugin: 'groovy'
 
 sourceCompatibility = 1.7
 
@@ -8,30 +9,29 @@ version = '0.4-SNAPSHOT'
 
 group = "net.ijus"
 
-// setup SPIDA artifactory settings
-def m2Root = new XmlSlurper().parse(new File(System.getProperty("user.home"), ".m2/settings.xml"))
-def m2Spida = m2Root.servers.server.find{ it.id.text() == "spida" }
-def m2Repos = m2Root.profiles.profile.find{ it.id.text() == "artifactory" }.properties
 
-project.ext.m2Settings = [
-		username: m2Spida.username.text(),
-		password: m2Spida.password.text(),
-		repo: m2Repos.defaultLocation.text(),
-		exposed: m2Repos.exposedLocation.text(),
-		snapshots: m2Repos.snapshotsLocation.text(),
-		releases: m2Repos.releasesLocation.text()
-]
+try {
+// setup SPIDA artifactory settings
+	def m2Root = new XmlSlurper().parse(new File(System.getProperty("user.home"), ".m2/settings.xml"))
+	def m2Spida = m2Root.servers.server.find{ it.id.text() == "spida" }
+	def m2Repos = m2Root.profiles.profile.find{ it.id.text() == "artifactory" }.properties
+	project.ext.m2Settings = [
+			username: m2Spida.username.text(),
+			password: m2Spida.password.text(),
+			repo: m2Repos.defaultLocation.text(),
+			exposed: m2Repos.exposedLocation.text(),
+			snapshots: m2Repos.snapshotsLocation.text(),
+			releases: m2Repos.releasesLocation.text()
+	]
+	project.ext.m2SettingsAvailable = true
+} catch (ex) {
+	println("M2 Settings could not be setup: " + ex.message)
+	project.ext.m2SettingsAvailable = false
+}
 
 repositories {
 	mavenLocal()
     mavenCentral()
-	maven {
-		credentials {
-			username m2Settings.username
-			password m2Settings.password
-		}
-		url m2Settings.repo
-	}
 }
 
 dependencies {
@@ -61,10 +61,12 @@ artifacts {
 	archives sourcesJar
 }
 
-uploadArchives {
-	repositories.mavenDeployer {
-		repository(url: m2Settings.exposed) {
-			authentication(userName: m2Settings.username, password: m2Settings.password)
+if (project.ext.m2SettingsAvailable) {
+	uploadArchives {
+		repositories.mavenDeployer {
+			repository(url: m2Settings.exposed) {
+				authentication(userName: m2Settings.username, password: m2Settings.password)
+			}
 		}
 	}
 }
