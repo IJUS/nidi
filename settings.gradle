@@ -1,2 +1,65 @@
 rootProject.name = 'nidi'
 
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            version 'groovy', '4.0.15'
+            version 'spock', '2.3-groovy-4.0'
+            version 'javafx', '21.0.1'
+
+            library 'groovy', 'org.apache.groovy', 'groovy' versionRef 'groovy'
+            library 'groovy-console', 'org.apache.groovy', 'groovy-console' versionRef 'groovy'
+            library 'groovy-datetime', 'org.apache.groovy', 'groovy-datetime' versionRef 'groovy'
+            library 'groovy-doc', 'org.apache.groovy', 'groovy-groovydoc' versionRef 'groovy'
+            library 'groovy-sh', 'org.apache.groovy', 'groovy-groovysh' versionRef 'groovy'
+            library 'groovy-json', 'org.apache.groovy', 'groovy-json' versionRef 'groovy'
+            library 'groovy-nio', 'org.apache.groovy', 'groovy-nio' versionRef 'groovy'
+            library 'groovy-xml', 'org.apache.groovy', 'groovy-xml' versionRef 'groovy'
+            library 'groovy-date-util', 'org.apache.groovy', 'groovy-dateutil' versionRef 'groovy'
+            library 'groovy-cli-commons', 'org.apache.groovy', 'groovy-cli-commons' versionRef 'groovy'
+            bundle 'groovy', ['groovy',
+                              'groovy-console',
+                              'groovy-datetime',
+                              'groovy-doc',
+                              'groovy-sh',
+                              'groovy-json',
+                              'groovy-nio',
+                              'groovy-xml',
+                              'groovy-date-util',
+                              'groovy-cli-commons']
+
+            library 'snakeyaml-engine', 'org.snakeyaml', 'snakeyaml-engine' version '2.9'
+
+            library 'spock-core', 'org.spockframework', 'spock-core' versionRef 'spock'
+            library 'bytebuddy', 'net.bytebuddy', 'byte-buddy' version'1.14.2'
+            library 'slf4j', 'org.slf4j', 'slf4j-api' version '1.7.36'
+            library 'jscience', 'org.jscience', 'jscience' version '4.3.1'
+            library 'mockito', 'org.mockito', 'mockito-all' version '1.8.4'
+            library 'nidi', 'net.ijus', 'nidi' version '0.3.1'
+            library 'itext', 'com.lowagie', 'itext' version '2.0.8'
+            library 'jazzy', 'net.sf.jazzy', 'jazzy-core' version '0.5.2'
+
+            library 'apache-commons-lang3', 'org.apache.commons', 'commons-lang3' version '3.14.0'
+            library 'apache-commons-io', 'commons-io', 'commons-io' version '2.15.1'
+            bundle 'apache-commons', ['apache-commons-lang3',
+                                      'apache-commons-io']
+
+            library 'jetbrains-annotations', 'org.jetbrains', 'annotations' version '26.0.2'
+            library 'asm', 'or.ow2.asm', 'asm' version '9.5'
+            library 'javafx-base', 'org.openjfx', 'javafx-base' versionRef 'javafx'
+            library 'javafx-controls', 'org.openjfx', 'javafx-controls' versionRef 'javafx'
+            library 'javafx-fxml', 'org.openjfx', 'javafx-fxml' versionRef 'javafx'
+            library 'javafx-graphics', 'org.openjfx', 'javafx-graphics' versionRef 'javafx'
+            library 'javafx-swing', 'org.openjfx', 'javafx-swing' versionRef 'javafx'
+            library 'javafx-web', 'org.openjfx', 'javafx-web' versionRef 'javafx'
+            bundle 'javafx', ['javafx-base',
+                              'javafx-controls',
+                              'javafx-fxml',
+                              'javafx-graphics',
+                              'javafx-swing',
+                              'javafx-web']
+        }
+    }
+}
+include 'scriptloader'
+include 'calc_scripts'
