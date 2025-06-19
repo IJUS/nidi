@@ -3,13 +3,10 @@ package net.ijus.nidi.builder
 import com.example.general.WithOptionalClass
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.LoggingService
-import net.ijus.nidi.bindings.NullBinding
 import net.ijus.nidi.bindings.Scope
-import net.ijus.nidi.instantiation.NullGenerator
 import spock.lang.Specification
 import net.ijus.nidi.bindings.Binding
 
-import static spock.lang.MockingApi.Mock
 /**
  * Created by pfried on 9/14/14.
  */
