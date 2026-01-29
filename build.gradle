@@ -1,33 +1,12 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'idea'
-apply plugin: 'groovy'
-
-sourceCompatibility = 1.7
+plugins {
+	id 'base'
+	id 'groovy'
+	id 'idea'
+	id 'java-library'
+}
 
 version = '0.4-SNAPSHOT'
-
 group = "net.ijus"
-
-
-try {
-// setup SPIDA artifactory settings
-	def m2Root = new XmlSlurper().parse(new File(System.getProperty("user.home"), ".m2/settings.xml"))
-	def m2Spida = m2Root.servers.server.find{ it.id.text() == "spida" }
-	def m2Repos = m2Root.profiles.profile.find{ it.id.text() == "artifactory" }.properties
-	project.ext.m2Settings = [
-			username: m2Spida.username.text(),
-			password: m2Spida.password.text(),
-			repo: m2Repos.defaultLocation.text(),
-			exposed: m2Repos.exposedLocation.text(),
-			snapshots: m2Repos.snapshotsLocation.text(),
-			releases: m2Repos.releasesLocation.text()
-	]
-	project.ext.m2SettingsAvailable = true
-} catch (ex) {
-	println("M2 Settings could not be setup: " + ex.message)
-	project.ext.m2SettingsAvailable = false
-}
 
 repositories {
 	mavenLocal()
@@ -35,39 +14,11 @@ repositories {
 }
 
 dependencies {
-
-	compile 'org.slf4j:slf4j-api:1.7.5'
-
-	testCompile 'org.codehaus.groovy:groovy-all:2.0.5'
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-	testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-	testCompile 'cglib:cglib:2.2.2'
-	testCompile 'org.objenesis:objenesis:1.4'
-
-	testCompile 'org.slf4j:slf4j-simple:1.7.5'
-
+	implementation libs.groovy
+	implementation libs.slf4j
+	implementation libs.jetbrains.annotations
+	implementation libs.snakeyaml.engine
+	testImplementation libs.spock.core, { exclude module: 'groovy' }
+	testImplementation libs.mockito
+	testRuntimeOnly libs.bytebuddy
 }
-
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
-}
-
-
-install.dependsOn sourcesJar
-
-artifacts {
-	archives sourcesJar
-}
-
-if (project.ext.m2SettingsAvailable) {
-	uploadArchives {
-		repositories.mavenDeployer {
-			repository(url: m2Settings.exposed) {
-				authentication(userName: m2Settings.username, password: m2Settings.password)
-			}
-		}
-	}
-}
-

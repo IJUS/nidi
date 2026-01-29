@@ -13,7 +13,7 @@ import spock.lang.Specification
 /**
  * Created by pfried on 9/14/14.
  */
-class NullBindingsIntegrationTest extends Specification {
+class NullBindingsIntegrationSpec extends Specification {
 
     ContextBuilder ctxBuilder = new ContextBuilder()
 
