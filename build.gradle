@@ -5,8 +5,13 @@ plugins {
 	id 'java-library'
 }
 
-version = '0.4-SNAPSHOT'
-group = "net.ijus"
+version = '1.0.0'
+group = "com.trccompanies"
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
 
 repositories {
 	mavenLocal()
