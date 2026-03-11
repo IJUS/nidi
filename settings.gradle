@@ -3,9 +3,8 @@ rootProject.name = 'nidi'
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            version 'groovy', '4.0.15'
-            version 'spock', '2.3-groovy-4.0'
-            version 'javafx', '21.0.1'
+            version 'groovy', '4.0.27'
+            version 'spock', '2.4-groovy-4.0'
 
             library 'groovy', 'org.apache.groovy', 'groovy' versionRef 'groovy'
             library 'groovy-console', 'org.apache.groovy', 'groovy-console' versionRef 'groovy'
@@ -46,18 +45,6 @@ dependencyResolutionManagement {
 
             library 'jetbrains-annotations', 'org.jetbrains', 'annotations' version '26.0.2'
             library 'asm', 'or.ow2.asm', 'asm' version '9.5'
-            library 'javafx-base', 'org.openjfx', 'javafx-base' versionRef 'javafx'
-            library 'javafx-controls', 'org.openjfx', 'javafx-controls' versionRef 'javafx'
-            library 'javafx-fxml', 'org.openjfx', 'javafx-fxml' versionRef 'javafx'
-            library 'javafx-graphics', 'org.openjfx', 'javafx-graphics' versionRef 'javafx'
-            library 'javafx-swing', 'org.openjfx', 'javafx-swing' versionRef 'javafx'
-            library 'javafx-web', 'org.openjfx', 'javafx-web' versionRef 'javafx'
-            bundle 'javafx', ['javafx-base',
-                              'javafx-controls',
-                              'javafx-fxml',
-                              'javafx-graphics',
-                              'javafx-swing',
-                              'javafx-web']
         }
     }
 }

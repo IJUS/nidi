@@ -7,7 +7,6 @@ import com.example.impl.BasicCCProcessor
 import com.example.impl.ComplexCCProcessor
 import com.example.impl.FraudDetectorImpl
 import com.example.impl.LoggingServiceImpl
-import com.example.impl.NamespacedLoggingService
 import com.example.interfaces.CreditCardProcessor
 import com.example.interfaces.FraudDetectionService
 import com.example.interfaces.LoggingService
@@ -26,7 +25,7 @@ import java.lang.reflect.Constructor
  */
 
 
-public class BindingBuilderSpec extends Specification {
+class BindingBuilderSpec extends Specification {
 
 	void "binding builders should be able to specify inner bindings to be used for constructor params"(){
 		setup:

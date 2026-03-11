@@ -19,11 +19,11 @@ repositories {
 }
 
 dependencies {
-	implementation libs.groovy
+	implementation libs.bundles.groovy
 	implementation libs.slf4j
 	implementation libs.jetbrains.annotations
 	implementation libs.snakeyaml.engine
-	testImplementation libs.spock.core, { exclude module: 'groovy' }
+	testImplementation libs.spock.core
 	testImplementation libs.mockito
 	testRuntimeOnly libs.bytebuddy
 }
